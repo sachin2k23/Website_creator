@@ -217,13 +217,13 @@ export default function PreviewMode({ elements, canvasSettings, onExit }) {
         <div
           style={{
             width:           current.width,
-            minHeight:       `${canvasSettings.height || 900}px`,
+            minHeight:       '100%',
             backgroundColor: canvasSettings.fill || '#ffffff',
             position:        'relative',
             boxShadow:       '0 8px 40px rgba(0,0,0,0.12)',
             borderRadius:    '8px',
             transition:      'width 0.3s ease',
-            overflow:        'hidden',
+            
           }}
         >
           {elements.map(el => renderElement(el))}

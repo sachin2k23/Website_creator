@@ -1,6 +1,6 @@
-import { Plus, Globe, Settings, BarChart2, Play, Users, Sparkles, RotateCcw, RotateCw, Download } from 'lucide-react'
+import { Database, Plus, Settings, Play, Users, Sparkles, RotateCcw, RotateCw, Download } from 'lucide-react'
 
-export default function CanvasTopbar({ onBack, onInsertClick, onUndo, onRedo, canUndo, canRedo, onPreview, onExport }) {
+export default function CanvasTopbar({ onBack, onInsertClick, onUndo, onRedo, canUndo, canRedo, onPreview, onExport, projectName = 'My Project' }) {
   return (
     <div className="h-14 bg-white border-b border-[#D8E1F0] flex items-center justify-between px-3 sm:px-4 shrink-0">
       <div className="flex items-center gap-1 min-w-0 overflow-x-auto">
@@ -48,33 +48,21 @@ export default function CanvasTopbar({ onBack, onInsertClick, onUndo, onRedo, ca
           Redo
         </button>
 
-        {/* Rest of tools */}
-        {['Layout', 'Text', 'Vector', 'CMS'].map((tool) => (
-          <button
-            key={tool}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-[#5E6F8E] hover:text-[#2348D7] hover:bg-[#F3F7FF] rounded-xl transition-colors whitespace-nowrap"
-          >
-            <Plus size={13} />
-            {tool}
-          </button>
-        ))}
+        <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-[#5E6F8E] hover:text-[#2348D7] hover:bg-[#F3F7FF] rounded-xl transition-colors whitespace-nowrap">
+          <Database size={13} />
+          CMS
+        </button>
       </div>
 
       <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-        <span className="text-[#0F2348] text-sm font-semibold">My Project</span>
+        <span className="text-[#0F2348] text-sm font-semibold">{projectName}</span>
         <span className="text-[#6F7E99] text-xs border border-[#D8E1F0] bg-[#FBFCFF] px-2 py-0.5 rounded-lg">FREE</span>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
         <div className="w-8 h-8 rounded-full bg-[#2F6BFF] flex items-center justify-center text-white text-xs font-bold">S</div>
         <button className="w-9 h-9 rounded-xl hover:bg-[#F3F7FF] flex items-center justify-center text-[#7D8CA8] hover:text-[#2348D7] transition-colors">
-          <Globe size={15} />
-        </button>
-        <button className="w-9 h-9 rounded-xl hover:bg-[#F3F7FF] flex items-center justify-center text-[#7D8CA8] hover:text-[#2348D7] transition-colors">
           <Settings size={15} />
-        </button>
-        <button className="hidden sm:flex w-9 h-9 rounded-xl hover:bg-[#F3F7FF] items-center justify-center text-[#7D8CA8] hover:text-[#2348D7] transition-colors">
-          <BarChart2 size={15} />
         </button>
         <button
           onClick={onPreview}

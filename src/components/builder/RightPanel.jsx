@@ -6,6 +6,7 @@ import {
   Upload, ImageIcon,
 } from 'lucide-react'
 import { HexColorPicker } from 'react-colorful'
+import { BREAKPOINTS, getCanvasWidth } from '../../utils/responsive'
 
 function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -232,15 +233,17 @@ function ImageUploadSection({ selected, onUpdate }) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-const TEXT_TYPES = ['heading', 'paragraph', 'text', 'link', 'button']
+const TEXT_TYPES = ['heading', 'paragraph', 'text', 'link', 'button', 'label']
 
-export default function RightPanel({ selected, onUpdate, canvasSettings, onCanvasUpdate, onDelete, onDuplicate, onReorder }) {
+export default function RightPanel({ selected, onUpdate, canvasSettings, onCanvasUpdate, onDelete, onDuplicate, onReorder, activeBreakpoint = 'desktop', customWidth = 800 }) {
   const [showBorder, setShowBorder] = useState(!!selected?.borderColor)
   const [showShadow, setShowShadow] = useState(!!selected?.shadowColor)
 
   const isText  = selected && TEXT_TYPES.includes(selected.type)
   const isImage = selected?.type === 'image'
   const update  = (key, val) => { if (selected) onUpdate(selected.id, { [key]: val }) }
+  const breakpoint = BREAKPOINTS.find(bp => bp.id === activeBreakpoint)
+  const canvasWidth = getCanvasWidth(activeBreakpoint, canvasSettings, customWidth)
 
   return (
     <div className="w-[260px] h-full bg-white border-l border-[#D8E1F0] flex flex-col shrink-0 overflow-y-auto">
@@ -251,6 +254,7 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
             <div>
               <p className="text-[#8A9ABB] text-[10px] uppercase tracking-widest">Properties</p>
               <p className="text-[#0F2348] text-sm font-semibold mt-0.5 capitalize">{selected.type}</p>
+              <p className="text-[#2348D7] text-[10px] font-semibold mt-1">{breakpoint?.label || 'Desktop'} breakpoint</p>
             </div>
             <div className="flex gap-1">
               <button onClick={() => onDuplicate(selected.id)} title="Duplicate"
@@ -270,16 +274,16 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
           {/* Position */}
           <Section title="Position">
             <div className="grid grid-cols-2 gap-2">
-              <NumberInput label="X" value={Math.round(selected.x)} suffix="px" onChange={val => update('x', val)} />
-              <NumberInput label="Y" value={Math.round(selected.y)} suffix="px" onChange={val => update('y', val)} />
+              <NumberInput label="X" value={Math.round(selected.x || 0)} suffix="px" onChange={val => update('x', val)} />
+              <NumberInput label="Y" value={Math.round(selected.y || 0)} suffix="px" onChange={val => update('y', val)} />
             </div>
           </Section>
 
           {/* Size */}
           <Section title="Size">
             <div className="grid grid-cols-2 gap-2">
-              <NumberInput label="Width"  value={selected.width  || 200} suffix="px" onChange={val => update('width',  val)} />
-              <NumberInput label="Height" value={selected.height || 100} suffix="px" onChange={val => update('height', val)} />
+              <NumberInput label="Width"  value={Math.round(selected.width  || 200)} suffix="px" onChange={val => update('width',  val)} />
+              <NumberInput label="Height" value={Math.round(selected.height || 100)} suffix="px" onChange={val => update('height', val)} />
             </div>
           </Section>
 
@@ -302,13 +306,14 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
           </Section>
 
           {/* Typography */}
-          {isText && (
-            <Section title="Typography">
+          <Section title="Typography">
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <NumberInput label="Size"   value={selected.fontSize   || (selected.type === 'heading' ? 32 : 16)} suffix="px" onChange={val => update('fontSize',   val)} />
-                <NumberInput label="Line H" value={selected.lineHeight || ''} suffix="×" onChange={val => update('lineHeight', val)} />
+                <NumberInput label="Line H" value={selected.lineHeight || ''} suffix="x" onChange={val => update('lineHeight', val)} />
               </div>
 
+              {isText && (
+                <>
               <p className="text-[#AAB8D4] text-[9px] mb-1.5 font-medium uppercase tracking-wide">Font</p>
               <select value={selected.fontFamily || 'Inter'} onChange={e => update('fontFamily', e.target.value)}
                 className="w-full mb-3 bg-[#F3F6FB] border border-[#E2E8F4] rounded-xl px-3 py-2 text-xs text-[#0F2348] outline-none focus:border-[#2348D7]">
@@ -350,8 +355,9 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
                 ))}
               </div>
               <ColorRow label="Color" color={selected.textColor||'#111827'} onChange={val=>update('textColor',val)} />
+                </>
+              )}
             </Section>
-          )}
 
           {/* Styles */}
           <Section title="Styles">
@@ -394,17 +400,28 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
           <div className="px-4 py-3 border-b border-[#EEF2FA] shrink-0">
             <p className="text-[#8A9ABB] text-[10px] uppercase tracking-widest">Properties</p>
             <p className="text-[#0F2348] text-sm font-semibold mt-0.5">Canvas</p>
+            <p className="text-[#2348D7] text-[10px] font-semibold mt-1">{breakpoint?.label || 'Desktop'} breakpoint</p>
           </div>
           <Section title="Breakpoint">
             <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-2">
+                <NumberInput label="X" value={canvasSettings.x || 0} suffix="px" onChange={val=>onCanvasUpdate({x:val})} />
+                <NumberInput label="Y" value={canvasSettings.y || 0} suffix="px" onChange={val=>onCanvasUpdate({y:val})} />
+              </div>
               <div>
                 <p className="text-[#5E6F8E] text-xs mb-2">Width</p>
-                <NumberInput value={canvasSettings.width} onChange={val=>val>0&&onCanvasUpdate({width:val})} />
+                <NumberInput value={canvasWidth} onChange={val=>activeBreakpoint === 'desktop' && val>0&&onCanvasUpdate({width:val})} />
               </div>
               <div>
                 <p className="text-[#5E6F8E] text-xs mb-2">Height</p>
                 <NumberInput value={canvasSettings.height} onChange={val=>val>0&&onCanvasUpdate({height:val})} />
               </div>
+            </div>
+          </Section>
+          <Section title="Typography">
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput label="Base" value={canvasSettings.fontSize || 16} suffix="px" onChange={val=>onCanvasUpdate({fontSize:val})} />
+              <NumberInput label="Line H" value={canvasSettings.lineHeight || ''} suffix="x" onChange={val=>onCanvasUpdate({lineHeight:val})} />
             </div>
           </Section>
           <Section title="Styles">

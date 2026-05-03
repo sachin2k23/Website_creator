@@ -1,200 +1,198 @@
-import { useState } from 'react'
-import { Home, Search, Plus, ChevronRight, ChevronDown, MoreHorizontal, Eye, EyeOff } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Home,
+  MoreHorizontal,
+  Plus,
+  Search,
+} from 'lucide-react'
 
-// ── Layer type icons ──────────────────────────────────────────────────────────
+const GROUP_BG = '#EAF6FF'
 
 const TYPE_META = {
-  heading:   { icon: 'T',   color: '#8B6CF7', bg: '#F0EBFF' },
-  paragraph: { icon: 'T',   color: '#8B6CF7', bg: '#F0EBFF' },
-  text:      { icon: 'T',   color: '#8B6CF7', bg: '#F0EBFF' },
-  link:      { icon: '↗',   color: '#3B82F6', bg: '#EFF6FF' },
-  button:    { icon: '▭',   color: '#3B82F6', bg: '#EFF6FF' },
-  container: { icon: null,  color: '#3B82F6', bg: '#EFF6FF', isFrame: true },
-  section:   { icon: null,  color: '#3B82F6', bg: '#EFF6FF', isFrame: true },
-  frame:     { icon: null,  color: '#3B82F6', bg: '#EFF6FF', isFrame: true },
-  divider:   { icon: '—',   color: '#94A3B8', bg: '#F1F5F9' },
-  image:     { icon: null,  color: '#10B981', bg: '#ECFDF5', isImage: true },
-  video:     { icon: '▶',   color: '#F59E0B', bg: '#FFFBEB' },
-  input:     { icon: '▭',   color: '#6366F1', bg: '#EEF2FF' },
-  checkbox:  { icon: '☑',   color: '#6366F1', bg: '#EEF2FF' },
+  desktop:   { label: 'Desktop',   icon: DesktopIcon,   color: '#2563EB', bg: '#EFF6FF' },
+  content:   { label: 'Content',   icon: StackIcon,     color: '#0284C7', bg: GROUP_BG },
+  section:   { label: 'Section',   icon: SectionIcon,   color: '#2563EB', bg: '#EFF6FF' },
+  container: { label: 'Container', icon: FrameIcon,     color: '#2563EB', bg: '#EFF6FF' },
+  frame:     { label: 'Frame',     icon: FrameIcon,     color: '#2563EB', bg: '#EFF6FF' },
+  heading:   { label: 'Heading',   icon: TypeIcon,      color: '#7C3AED', bg: '#F3E8FF' },
+  paragraph: { label: 'Text',      icon: TypeIcon,      color: '#7C3AED', bg: '#F3E8FF' },
+  text:      { label: 'Text',      icon: TypeIcon,      color: '#7C3AED', bg: '#F3E8FF' },
+  link:      { label: 'Link',      icon: LinkIcon,      color: '#2563EB', bg: '#EFF6FF' },
+  button:    { label: 'Button',    icon: ButtonIcon,    color: '#2563EB', bg: '#EFF6FF' },
+  image:     { label: 'Image',     icon: ImageIcon,     color: '#059669', bg: '#ECFDF5' },
+  video:     { label: 'Video',     icon: VideoIcon,     color: '#D97706', bg: '#FFFBEB' },
+  divider:   { label: 'Divider',   icon: DividerIcon,   color: '#64748B', bg: '#F1F5F9' },
+  input:     { label: 'Input',     icon: InputIcon,     color: '#4F46E5', bg: '#EEF2FF' },
+  checkbox:  { label: 'Checkbox',  icon: CheckboxIcon,  color: '#4F46E5', bg: '#EEF2FF' },
 }
 
-// ── Frame SVG icon (like Framer's stacked squares) ───────────────────────────
-function FrameIcon({ color = '#3B82F6', size = 12 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 12 12" fill="none">
-      <rect x="0.5" y="0.5" width="11" height="11" rx="1.5" stroke={color} strokeWidth="1.2" fill="none"/>
-      <rect x="2.5" y="2.5" width="7" height="7" rx="0.8" fill={color} opacity="0.25"/>
-    </svg>
-  )
-}
-
-// ── Image SVG icon ────────────────────────────────────────────────────────────
-function ImageIcon({ color = '#10B981', size = 12 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 12 12" fill="none">
-      <rect x="0.5" y="0.5" width="11" height="11" rx="1.5" stroke={color} strokeWidth="1.2" fill="none"/>
-      <circle cx="4" cy="4" r="1.2" fill={color} opacity="0.6"/>
-      <path d="M1 9l3-3 2 2 2-3 3 4" stroke={color} strokeWidth="1" strokeLinejoin="round" fill="none" opacity="0.8"/>
-    </svg>
-  )
-}
-
-// ── Single layer row (recursive) ──────────────────────────────────────────────
 function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHide }) {
   const hasChildren = Array.isArray(node.children) && node.children.length > 0
-  const [collapsed, setCollapsed] = useState(false)
-  const [hovered, setHovered]     = useState(false)
+  const defaultCollapsed = depth > 2 && node.type !== 'desktop' && node.type !== 'content'
+  const [collapsed, setCollapsed] = useState(defaultCollapsed)
+  const [hovered, setHovered] = useState(false)
+  const rowRef = useRef(null)
 
-  const isSelected = selectedId === node.id
-  const isHidden   = hiddenIds?.has(node.id)
+  const isVirtual = node.virtual
+  const isSelected = !isVirtual && selectedId === node.id
+  const hasSelectedChild = hasChildren && containsNode(node.children, selectedId)
+  const isExpanded = !collapsed || hasSelectedChild
+  const isHidden = hiddenIds?.has(node.id)
+  const meta = TYPE_META[node.type] || { label: node.type || 'Layer', icon: UnknownIcon, color: '#64748B', bg: '#F1F5F9' }
+  const Icon = meta.icon
+  const label = getLayerLabel(node, meta)
+  const indent = 8 + depth * 16
 
-  const meta  = TYPE_META[node.type] || { icon: '?', color: '#6B7280', bg: '#F3F4F6' }
-  const label = node.name || node.content?.slice(0, 22) || node.type
-
-  const indent = depth * 16 // px per level
+  useEffect(() => {
+    if (isSelected && rowRef.current) {
+      rowRef.current.scrollIntoView({ block: 'nearest' })
+    }
+  }, [isSelected])
 
   return (
     <>
       <div
-        className="relative group"
+        ref={rowRef}
+        className="relative"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
         <button
-          onClick={() => onSelect(node.id)}
-          className="flex items-center w-full text-left rounded-md transition-all duration-100"
+          type="button"
+          onClick={() => {
+            if (isVirtual) {
+              if (hasChildren) setCollapsed(value => !value)
+              return
+            }
+            onSelect(node.id)
+          }}
+          className="group flex h-8 w-full items-center rounded-lg text-left transition-colors"
           style={{
-            paddingLeft: 6 + indent,
-            paddingRight: 6,
-            paddingTop: 4,
-            paddingBottom: 4,
-            backgroundColor: isSelected
-              ? '#EEF3FF'
-              : hovered ? '#F5F7FC' : 'transparent',
+            paddingLeft: indent,
+            paddingRight: 8,
+            backgroundColor: isSelected ? '#0EA5E9' : hovered ? '#F1F7FF' : 'transparent',
+            color: isSelected ? '#FFFFFF' : '#26364D',
           }}
         >
-          {/* Collapse toggle */}
           <span
-            className="shrink-0 mr-0.5 rounded hover:bg-[#DDE6F7] transition-colors"
-            style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={e => { e.stopPropagation(); if (hasChildren) setCollapsed(v => !v) }}
-          >
-            {hasChildren ? (
-              collapsed
-                ? <ChevronRight size={10} className="text-[#94A3B8]" />
-                : <ChevronDown  size={10} className="text-[#94A3B8]" />
-            ) : null}
-          </span>
-
-          {/* Type icon badge */}
-          <span
-            className="shrink-0 mr-1.5 flex items-center justify-center rounded"
-            style={{
-              width: 18, height: 18,
-              backgroundColor: meta.bg,
-              fontSize: 10,
-              color: meta.color,
-              fontWeight: 700,
+            className="mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors"
+            onClick={event => {
+              event.stopPropagation()
+              if (hasChildren) setCollapsed(value => !value)
             }}
           >
-            {meta.isFrame
-              ? <FrameIcon color={meta.color} size={10} />
-              : meta.isImage
-                ? <ImageIcon color={meta.color} size={10} />
-                : meta.icon}
+            {hasChildren ? (
+              isExpanded
+                ? <ChevronDown size={13} className={isSelected ? 'text-white' : 'text-[#7B8AA5]'} />
+                : <ChevronRight size={13} className={isSelected ? 'text-white' : 'text-[#7B8AA5]'} />
+            ) : (
+              <span className="h-1 w-1 rounded-full bg-[#CBD5E1]" />
+            )}
           </span>
 
-          {/* Label */}
           <span
-            className="flex-1 truncate text-[12px] leading-none"
+            className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
             style={{
-              color: isSelected ? '#2348D7' : isHidden ? '#B0BDD0' : '#1E2D45',
-              fontWeight: isSelected ? 600 : 400,
+              backgroundColor: isSelected ? 'rgba(255,255,255,0.18)' : meta.bg,
+              color: isSelected ? '#FFFFFF' : meta.color,
+            }}
+          >
+            <Icon size={12} />
+          </span>
+
+          <span
+            className="min-w-0 flex-1 truncate text-[12px]"
+            style={{
+              fontWeight: isSelected || isVirtual ? 650 : 500,
+              color: isSelected ? '#FFFFFF' : isHidden ? '#A8B4C7' : isVirtual ? '#42526D' : '#1D2B44',
               textDecoration: isHidden ? 'line-through' : 'none',
             }}
           >
             {label}
           </span>
 
-          {/* Hover actions */}
-          {hovered && (
-            <span className="flex items-center gap-0.5 ml-1 shrink-0">
-              <span
-                className="p-0.5 rounded hover:bg-[#DDE6F7] text-[#94A3B8] hover:text-[#2348D7] transition-colors"
-                onClick={e => { e.stopPropagation(); onToggleHide?.(node.id) }}
-                title={isHidden ? 'Show' : 'Hide'}
-              >
-                {isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-              </span>
+          {node.badge && (
+            <span className={`ml-2 shrink-0 text-[10px] ${isSelected ? 'text-sky-100' : 'text-[#97A6BD]'}`}>
+              {node.badge}
+            </span>
+          )}
+
+          {!isVirtual && (hovered || isHidden) && (
+            <span
+              className={`ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
+                isSelected ? 'hover:bg-white/15' : 'hover:bg-[#DBEAFE]'
+              }`}
+              onClick={event => {
+                event.stopPropagation()
+                onToggleHide?.(node.id)
+              }}
+              title={isHidden ? 'Show' : 'Hide'}
+            >
+              {isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
             </span>
           )}
         </button>
 
-        {/* Left border accent for selected */}
         {isSelected && (
-          <span
-            className="absolute left-0 top-1 bottom-1 w-[2.5px] rounded-full bg-[#2348D7]"
-          />
+          <span className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-[#0B74DE]" />
         )}
       </div>
 
-      {/* Recursive children */}
-      {hasChildren && !collapsed && (
-        <div>
-          {node.children.map(child => (
-            <LayerRow
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              selectedId={selectedId}
-              onSelect={onSelect}
-              hiddenIds={hiddenIds}
-              onToggleHide={onToggleHide}
-            />
-          ))}
-        </div>
-      )}
+      {hasChildren && isExpanded && node.children.map(child => (
+        <LayerRow
+          key={child.id}
+          node={child}
+          depth={depth + 1}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          hiddenIds={hiddenIds}
+          onToggleHide={onToggleHide}
+        />
+      ))}
     </>
   )
 }
 
-// ── Page row ──────────────────────────────────────────────────────────────────
 function PageRow({ page, isActive, onSelect, onRename, onDelete, canDelete }) {
   const [showMenu, setShowMenu] = useState(false)
 
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={onSelect}
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs w-full text-left transition-colors group mb-0.5 ${
-          isActive
-            ? 'bg-[#EEF3FF] text-[#2348D7] font-semibold'
-            : 'text-[#243754] hover:bg-[#F3F7FF]'
+        className={`mb-1 flex h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-xs transition-colors ${
+          isActive ? 'bg-[#EEF6FF] text-[#0B74DE] font-semibold' : 'text-[#30425F] hover:bg-[#F4F8FD]'
         }`}
       >
-        <Home size={12} className="shrink-0" />
+        <Home size={13} className="shrink-0" />
         <span className="flex-1 truncate">{page.name}</span>
         <span
-          onClick={e => { e.stopPropagation(); setShowMenu(v => !v) }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-[#D8E8FF]"
+          onClick={event => { event.stopPropagation(); setShowMenu(value => !value) }}
+          className="rounded p-0.5 opacity-0 transition-opacity hover:bg-[#DBEAFE] group-hover:opacity-100"
         >
-          <MoreHorizontal size={11} />
+          <MoreHorizontal size={12} />
         </span>
       </button>
 
       {showMenu && (
-        <div className="absolute left-full top-0 ml-1 z-50 bg-white border border-[#D8E1F0] rounded-xl shadow-lg overflow-hidden w-36">
+        <div className="absolute left-full top-0 z-50 ml-1 w-36 overflow-hidden rounded-xl border border-[#D8E1F0] bg-white shadow-lg">
           <button
+            type="button"
             onClick={() => { onRename(); setShowMenu(false) }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#243754] hover:bg-[#F3F7FF] transition-colors"
+            className="flex w-full items-center gap-2 px-3 py-2 text-xs text-[#243754] transition-colors hover:bg-[#F3F7FF]"
           >
             Rename
           </button>
           {canDelete && (
             <button
+              type="button"
               onClick={() => { onDelete(); setShowMenu(false) }}
-              className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"
+              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-500 transition-colors hover:bg-red-50"
             >
               Delete
             </button>
@@ -205,7 +203,6 @@ function PageRow({ page, isActive, onSelect, onRename, onDelete, canDelete }) {
   )
 }
 
-// ── Main LeftPanel ────────────────────────────────────────────────────────────
 export default function LeftPanel({
   elements = [],
   selectedId,
@@ -219,11 +216,22 @@ export default function LeftPanel({
   onRenamePage,
   onDeletePage,
 }) {
-  const tabs = ['Pages', 'Layers', 'Assets']
-  const [search, setSearch]     = useState('')
+  const tabs = ['Pages', 'Layers']
+  const [search, setSearch] = useState('')
   const [hiddenIds, setHiddenIds] = useState(new Set())
 
-  const toggleHide = (id) => {
+  const layerTree = useMemo(() => buildLayerTree(elements), [elements])
+  const flatLayers = useMemo(() => flattenTree(layerTree).filter(node => !node.virtual), [layerTree])
+  const searchTrimmed = search.trim().toLowerCase()
+  const filtered = searchTrimmed
+    ? flatLayers.filter(node =>
+        getLayerLabel(node, TYPE_META[node.type]).toLowerCase().includes(searchTrimmed) ||
+        (node.content || '').toLowerCase().includes(searchTrimmed) ||
+        (node.type || '').toLowerCase().includes(searchTrimmed)
+      )
+    : null
+
+  const toggleHide = id => {
     setHiddenIds(prev => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
@@ -231,77 +239,52 @@ export default function LeftPanel({
     })
   }
 
-  // Flatten tree for search filtering
-  function flattenTree(nodes, result = []) {
-    for (const n of nodes) {
-      result.push(n)
-      if (n.children?.length) flattenTree(n.children, result)
-    }
-    return result
-  }
-
-  const allNodes      = flattenTree(elements)
-  const searchTrimmed = search.trim().toLowerCase()
-  const filtered      = searchTrimmed
-    ? allNodes.filter(n =>
-        (n.name || n.type || '').toLowerCase().includes(searchTrimmed) ||
-        (n.content || '').toLowerCase().includes(searchTrimmed)
-      )
-    : null // null = show full tree
-
-  // Reversed for display (top of canvas = top of list)
-  const rootNodes = [...elements].reverse()
-
   return (
-    <div className="w-[260px] h-full bg-white border-r border-[#D8E1F0] flex flex-col shrink-0 select-none">
-
-      {/* ── Tabs ── */}
-      <div className="flex items-center gap-0.5 px-2 py-2 border-b border-[#E4EBF6]">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => onTabChange(tab)}
-            className={`flex-1 py-1.5 rounded-xl text-[12px] font-medium transition-colors ${
-              activeTab === tab
-                ? 'bg-[#EEF3FF] text-[#2348D7] font-semibold'
-                : 'text-[#6F7E99] hover:text-[#2348D7] hover:bg-[#F3F7FF]'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+    <div className="flex h-full w-[292px] shrink-0 select-none flex-col border-r border-[#D8E1F0] bg-white">
+      <div className="border-b border-[#E4EBF6] px-3 py-2">
+        <div className="flex rounded-xl bg-[#F2F5FA] p-1">
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => onTabChange(tab)}
+              className={`h-8 flex-1 rounded-lg text-[12px] font-semibold transition-all ${
+                activeTab === tab
+                  ? 'bg-white text-[#0B74DE] shadow-sm'
+                  : 'text-[#75849A] hover:text-[#30425F]'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ── Search bar ── */}
-      <div className="px-3 py-2 border-b border-[#E4EBF6]">
-        <div className="flex items-center gap-2 bg-[#F7F9FD] border border-[#DFE6F2] rounded-lg px-2.5 py-1.5">
-          <Search size={12} className="text-[#94A3BD] shrink-0" />
+      <div className="border-b border-[#E4EBF6] px-3 py-2">
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-[#DFE6F2] bg-[#F7F9FD] px-2.5">
+          <Search size={13} className="shrink-0 text-[#94A3BD]" />
           <input
             type="text"
-            placeholder="Search…"
+            placeholder="Search layers..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="bg-transparent text-[12px] text-[#21395F] placeholder-[#94A3BD] outline-none w-full"
+            onChange={event => setSearch(event.target.value)}
+            className="w-full bg-transparent text-[12px] text-[#21395F] outline-none placeholder:text-[#94A3BD]"
           />
         </div>
       </div>
 
-      {/* ── Content ── */}
-      <div className="flex-1 overflow-y-auto">
-
-        {/* ── Pages tab ── */}
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         {activeTab === 'Pages' && (
-          <div className="p-2">
-            <div className="flex items-center justify-between px-2 py-1.5 mb-1">
-              <span className="text-[#94A3BD] text-[10px] font-semibold uppercase tracking-widest">
-                Pages
-              </span>
+          <div>
+            <div className="mb-1 flex items-center justify-between px-2 py-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#94A3BD]">Pages</span>
               <button
+                type="button"
                 onClick={onAddPage}
-                className="text-[#94A3BD] hover:text-[#2348D7] hover:bg-[#EEF3FF] rounded-lg p-0.5 transition-colors"
+                className="rounded-lg p-1 text-[#94A3BD] transition-colors hover:bg-[#EEF6FF] hover:text-[#0B74DE]"
                 title="Add page"
               >
-                <Plus size={13} />
+                <Plus size={14} />
               </button>
             </div>
             {pages.map(page => (
@@ -318,37 +301,28 @@ export default function LeftPanel({
           </div>
         )}
 
-        {/* ── Layers tab ── */}
         {activeTab === 'Layers' && (
-          <div className="py-1.5 px-2">
+          <div>
             {elements.length === 0 ? (
-              <p className="text-[#C5D0E4] text-xs text-center py-8">
-                No layers yet
-              </p>
+              <p className="py-8 text-center text-xs text-[#C5D0E4]">No layers yet</p>
             ) : filtered ? (
-              /* Search results — flat list */
               filtered.length === 0 ? (
-                <p className="text-[#C5D0E4] text-xs text-center py-8">No results</p>
-              ) : (
-                filtered.map(node => (
-                  <LayerRow
-                    key={node.id}
-                    node={{ ...node, children: [] }} // flatten for search view
-                    depth={0}
-                    selectedId={selectedId}
-                    onSelect={onSelect}
-                    hiddenIds={hiddenIds}
-                    onToggleHide={toggleHide}
-                  />
-                ))
-              )
+                <p className="py-8 text-center text-xs text-[#C5D0E4]">No results</p>
+              ) : filtered.map(node => (
+                <LayerRow
+                  key={node.id}
+                  node={{ ...node, children: [] }}
+                  selectedId={selectedId}
+                  onSelect={onSelect}
+                  hiddenIds={hiddenIds}
+                  onToggleHide={toggleHide}
+                />
+              ))
             ) : (
-              /* Full hierarchical tree */
-              rootNodes.map(node => (
+              layerTree.map(node => (
                 <LayerRow
                   key={node.id}
                   node={node}
-                  depth={0}
                   selectedId={selectedId}
                   onSelect={onSelect}
                   hiddenIds={hiddenIds}
@@ -358,12 +332,187 @@ export default function LeftPanel({
             )}
           </div>
         )}
-
-        {/* ── Assets tab ── */}
-        {activeTab === 'Assets' && (
-          <p className="text-[#94A3BD] text-xs text-center py-8">No assets yet</p>
-        )}
       </div>
     </div>
   )
+}
+
+function buildLayerTree(elements) {
+  const displayRoots = inferContainerHierarchy(elements)
+  const count = flattenTree(displayRoots).filter(node => !node.virtual).length
+
+  return [{
+    id: '__desktop-root',
+    type: 'desktop',
+    virtual: true,
+    badge: `${count}`,
+    children: [{
+      id: '__content-root',
+      type: 'content',
+      virtual: true,
+      badge: `${displayRoots.length}`,
+      children: displayRoots,
+    }],
+  }]
+}
+
+function inferContainerHierarchy(elements) {
+  const nodes = elements.map(element => ({
+    ...element,
+    children: Array.isArray(element.children) ? element.children.map(child => ({ ...child })) : [],
+  }))
+  const byId = new Map(nodes.map(node => [node.id, node]))
+  const assigned = new Set()
+
+  nodes.forEach(child => {
+    if (assigned.has(child.id)) return
+    if (child.children?.length) {
+      child.children.forEach(grandchild => assigned.add(grandchild.id))
+    }
+
+    const parent = findBestVisualParent(child, nodes)
+    if (!parent) return
+
+    parent.children = [...(parent.children || []), child]
+    assigned.add(child.id)
+  })
+
+  return nodes
+    .filter(node => !assigned.has(node.id) && byId.has(node.id))
+    .sort(compareLayers)
+    .map(sortChildren)
+}
+
+function findBestVisualParent(child, candidates) {
+  const childBox = getBox(child)
+  if (!childBox) return null
+
+  return candidates
+    .filter(candidate =>
+      candidate.id !== child.id &&
+      isContainerType(candidate.type) &&
+      !isContainedBy(child, candidate) &&
+      containsBox(getBox(candidate), childBox)
+    )
+    .sort((a, b) => area(getBox(a)) - area(getBox(b)))[0] || null
+}
+
+function isContainedBy(child, candidate) {
+  return candidate.children?.some(node => node.id === child.id)
+}
+
+function containsBox(parent, child) {
+  if (!parent || !child) return false
+  if (area(parent) <= area(child)) return false
+
+  const tolerance = 2
+  return (
+    child.x >= parent.x - tolerance &&
+    child.y >= parent.y - tolerance &&
+    child.x + child.width <= parent.x + parent.width + tolerance &&
+    child.y + child.height <= parent.y + parent.height + tolerance
+  )
+}
+
+function getBox(node) {
+  return {
+    x: node.x ?? 0,
+    y: node.y ?? 0,
+    width: node.width ?? 0,
+    height: node.height ?? 0,
+  }
+}
+
+function area(box) {
+  return Math.max(0, box?.width || 0) * Math.max(0, box?.height || 0)
+}
+
+function isContainerType(type) {
+  return type === 'container' || type === 'section' || type === 'frame'
+}
+
+function compareLayers(a, b) {
+  const ay = a.y ?? 0
+  const by = b.y ?? 0
+  if (ay !== by) return ay - by
+  return (a.x ?? 0) - (b.x ?? 0)
+}
+
+function sortChildren(node) {
+  return {
+    ...node,
+    children: (node.children || []).sort(compareLayers).map(sortChildren),
+  }
+}
+
+function flattenTree(nodes, result = []) {
+  nodes.forEach(node => {
+    result.push(node)
+    if (node.children?.length) flattenTree(node.children, result)
+  })
+  return result
+}
+
+function containsNode(nodes, id) {
+  if (!id) return false
+  return nodes.some(node => node.id === id || (node.children?.length && containsNode(node.children, id)))
+}
+
+function getLayerLabel(node, meta) {
+  if (node.virtual) return meta?.label || node.type
+  if (node.name && node.name !== node.type) return node.name
+  if (node.content?.trim()) return node.content.trim().replace(/\s+/g, ' ').slice(0, 34)
+  return meta?.label || node.type || 'Layer'
+}
+
+function DesktopIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M5 12h4M7 9.5V12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+}
+
+function StackIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="2" y="2.5" width="10" height="2.5" rx="1" fill="currentColor"/><rect x="2" y="6" width="10" height="2.5" rx="1" fill="currentColor"/><rect x="2" y="9.5" width="10" height="2.5" rx="1" fill="currentColor"/></svg>
+}
+
+function SectionIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M2 5h10" stroke="currentColor" strokeWidth="1.3"/></svg>
+}
+
+function FrameIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><rect x="4" y="4" width="6" height="6" rx="1" fill="currentColor" opacity="0.18"/></svg>
+}
+
+function TypeIcon({ size = 12 }) {
+  return <span style={{ fontSize: size, fontWeight: 800, lineHeight: 1 }}>T</span>
+}
+
+function ImageIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><circle cx="5" cy="5" r="1" fill="currentColor"/><path d="M3 10l3-3 2 2 1.5-2 1.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+}
+
+function LinkIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><path d="M5.8 8.2l2.4-2.4M6 4.2l.4-.4a2.3 2.3 0 013.2 3.2l-.4.4M8 9.8l-.4.4a2.3 2.3 0 01-3.2-3.2l.4-.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+}
+
+function ButtonIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="2" y="4" width="10" height="6" rx="3" stroke="currentColor" strokeWidth="1.4"/><path d="M5 7h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+}
+
+function VideoIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M6 5.5l3 1.5-3 1.5v-3z" fill="currentColor"/></svg>
+}
+
+function DividerIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><path d="M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+}
+
+function InputIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="2" y="4" width="10" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 6v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+}
+
+function CheckboxIcon({ size = 12 }) {
+  return <svg width={size} height={size} viewBox="0 0 14 14" fill="none"><rect x="2.5" y="2.5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M4.5 7l1.7 1.7 3.3-3.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+}
+
+function UnknownIcon({ size = 12 }) {
+  return <span style={{ fontSize: size, fontWeight: 800, lineHeight: 1 }}>?</span>
 }

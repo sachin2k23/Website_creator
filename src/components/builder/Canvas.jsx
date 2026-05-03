@@ -1,15 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import CanvasElement from './CanvasElement'
 import { Monitor, Tablet, Smartphone, Settings2, MousePointer2, Hand } from 'lucide-react'
+import { BREAKPOINTS, getCanvasWidth, getElementLayout } from '../../utils/responsive'
 
-const BREAKPOINTS = [
-  { id: 'desktop', label: 'Desktop', icon: Monitor,    width: 1200 },
-  { id: 'tablet',  label: 'Tablet',  icon: Tablet,     width: 768  },
-  { id: 'phone',   label: 'Phone',   icon: Smartphone, width: 390  },
-  { id: 'custom',  label: 'Custom',  icon: Settings2,  width: null },
-]
-
-const PADDING_BOTTOM = 80  // extra space below last element
+const PADDING_BOTTOM = 80
 
 export default function Canvas({
   elements,
@@ -19,34 +13,34 @@ export default function Canvas({
   onUpdate,
   canvasSettings,
   onContextMenu,
+  activeBreakpoint,
+  onBreakpointChange,
+  customWidth,
+  onCustomWidthChange,
 }) {
-  const [activeBreakpoint, setActiveBreakpoint] = useState('desktop')
-  const [customWidth, setCustomWidth]           = useState(800)
-  const [zoom, setZoom]                         = useState(0.75)
-  const [activeTool, setActiveTool]             = useState('cursor')
-  const [showGrid, setShowGrid]                 = useState(true)
+  const [zoom, setZoom]           = useState(0.75)
+  const [activeTool, setActiveTool] = useState('cursor')
+  const [showGrid, setShowGrid]   = useState(true)
+  const [isCanvasHover, setIsCanvasHover] = useState(false)
+  const [isCanvasPinned, setIsCanvasPinned] = useState(false)
 
   const isPanning     = useRef(false)
   const lastMouse     = useRef({ x: 0, y: 0 })
   const canvasAreaRef = useRef(null)
 
-  const current = BREAKPOINTS.find(b => b.id === activeBreakpoint)
+  const canvasWidth = getCanvasWidth(activeBreakpoint, canvasSettings, customWidth)
 
-  const canvasWidth =
-    activeBreakpoint === 'custom'  ? customWidth :
-    activeBreakpoint === 'desktop' ? (canvasSettings?.width || 1200) :
-    current.width
-
-  // ── Auto-height: grow to fit all elements ──────────────────────────────────
+  // ── Auto-height ────────────────────────────────────────────────────────────
   const canvasHeight = useMemo(() => {
     const minH = canvasSettings?.height || 900
     if (!elements?.length) return minH
     const maxBottom = elements.reduce((acc, el) => {
-      const bottom = (el.y || 0) + (el.height || 100)
+      const layout = getElementLayout(el, activeBreakpoint)
+      const bottom = (layout.y || 0) + (layout.height || 100)
       return Math.max(acc, bottom)
     }, 0)
     return Math.max(minH, maxBottom + PADDING_BOTTOM)
-  }, [elements, canvasSettings?.height])
+  }, [elements, canvasSettings?.height, activeBreakpoint])
 
   // ── Zoom helpers ───────────────────────────────────────────────────────────
   const applyZoom = (newZoom) => {
@@ -112,6 +106,13 @@ export default function Canvas({
       canvasAreaRef.current.style.cursor = activeTool === 'hand' ? 'grab' : 'default'
   }, [activeTool])
 
+  useEffect(() => {
+    if (selectedId !== null) setIsCanvasPinned(false)
+  }, [selectedId])
+
+  const currentBP = BREAKPOINTS.find(b => b.id === activeBreakpoint)
+  const showCanvasFrame = activeTool === 'cursor' && (isCanvasHover || isCanvasPinned)
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 h-full flex flex-col overflow-hidden bg-[#F0F2F8]">
@@ -119,10 +120,16 @@ export default function Canvas({
       {/* ── Breakpoint bar ── */}
       <div className="flex items-center justify-center pt-4 pb-3 shrink-0">
         <div className="flex items-center gap-1 bg-white border border-[#D8E1F0] rounded-2xl px-2 py-1.5 shadow-sm">
-          {BREAKPOINTS.map(({ id, label, icon: Icon, width }) => (
+
+          {[
+            { id: 'desktop', label: 'Desktop',  icon: Monitor,    hint: '1200' },
+            { id: 'tablet',  label: 'Tablet',   icon: Tablet,     hint: '768'  },
+            { id: 'phone',   label: 'Phone',    icon: Smartphone, hint: '390'  },
+            { id: 'custom',  label: 'Custom',   icon: Settings2,  hint: null   },
+          ].map(({ id, label, icon: Icon, hint }) => (
             <button
               key={id}
-              onClick={e => { e.stopPropagation(); setActiveBreakpoint(id) }}
+              onClick={e => { e.stopPropagation(); onBreakpointChange(id) }}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
                 activeBreakpoint === id
                   ? 'bg-[#2348D7] text-white shadow'
@@ -131,9 +138,9 @@ export default function Canvas({
             >
               <Icon size={13} />
               {label}
-              {id !== 'custom' && (
+              {hint && (
                 <span className={`text-[10px] ${activeBreakpoint === id ? 'text-blue-200' : 'text-[#AAB8D4]'}`}>
-                  {width}
+                  {hint}
                 </span>
               )}
             </button>
@@ -148,7 +155,7 @@ export default function Canvas({
                 type="number"
                 value={customWidth}
                 onClick={e => e.stopPropagation()}
-                onChange={e => setCustomWidth(Number(e.target.value))}
+                onChange={e => onCustomWidthChange(Number(e.target.value))}
                 className="w-16 text-xs text-[#0F2348] bg-[#F3F6FB] border border-[#D8E1F0] rounded-lg px-2 py-1 outline-none focus:border-[#2348D7]"
               />
               <span className="text-[#AAB8D4] text-xs">px</span>
@@ -159,6 +166,13 @@ export default function Canvas({
               <span className="text-[#0F2348] text-xs font-medium">{canvasWidth}px</span>
             </div>
           )}
+
+          {/* Breakpoint indicator badge */}
+          {activeBreakpoint !== 'desktop' && (
+            <div className="ml-1 px-2 py-0.5 rounded-lg bg-[#FFF3CD] border border-[#FFE082] text-[#856404] text-[10px] font-medium">
+              {currentBP?.label} layout
+            </div>
+          )}
         </div>
       </div>
 
@@ -167,12 +181,13 @@ export default function Canvas({
         ref={canvasAreaRef}
         className="flex-1 overflow-auto select-none"
         style={{ backgroundColor: '#F0F2F8' }}
-        onClick={() => activeTool === 'cursor' && onSelect(null)}
+        onClick={e => {
+          if (e.target === e.currentTarget && activeTool === 'cursor') {
+            setIsCanvasPinned(false)
+            onSelect(null)
+          }
+        }}
       >
-        {/*
-          Outer wrapper: centres the canvas horizontally and
-          reserves the correct scaled height so the scrollbar is accurate.
-        */}
         <div
           style={{
             display:       'flex',
@@ -180,19 +195,24 @@ export default function Canvas({
             alignItems:    'center',
             paddingTop:    '32px',
             paddingBottom: '120px',
-            // Wide enough for the scaled canvas + some side breathing room
             minWidth:      `${canvasWidth * zoom + 160}px`,
           }}
+          onClick={e => {
+            if (e.target === e.currentTarget && activeTool === 'cursor') {
+              setIsCanvasPinned(false)
+              onSelect(null)
+            }
+          }}
         >
-          {/* Scale wrapper — only this element is zoomed */}
+          {/* ── Zoom wrapper — only zoom here, NO breakpoint scaling ── */}
           <div
             style={{
               width:           `${canvasWidth}px`,
               transform:       `scale(${zoom})`,
               transformOrigin: 'top center',
               flexShrink:      0,
-              // Push the document flow down by the extra height the scale adds
               marginBottom:    `${canvasHeight * (zoom - 1)}px`,
+              pointerEvents:    'auto',
             }}
           >
             {/* Canvas label row */}
@@ -204,7 +224,7 @@ export default function Canvas({
                 <div className="w-4 h-4 bg-[#2348D7] rounded-sm flex items-center justify-center">
                   <span className="text-white text-[8px]">▶</span>
                 </div>
-                <span className="text-[#5E6F8E] text-xs font-medium">{current?.label}</span>
+                <span className="text-[#5E6F8E] text-xs font-medium">{currentBP?.label}</span>
                 <span className="text-[#AAB8D4] text-xs">{canvasWidth}</span>
               </div>
               <span className="text-[#2348D7] text-xs">Primary</span>
@@ -212,25 +232,58 @@ export default function Canvas({
 
             {/* ── White canvas page ── */}
             <div
+              className="canvas-page"
               style={{
                 width:           `${canvasWidth}px`,
-                height:          `${canvasHeight}px`,   // auto-grows with content
+                height:          `${canvasHeight}px`,
                 backgroundColor: canvasSettings?.fill || '#ffffff',
                 borderRadius:    '6px 6px 0 0',
                 position:        'relative',
-                overflow:        'hidden',               // clip elements to canvas bounds
+                overflow:        'hidden',
                 pointerEvents:   activeTool === 'hand' ? 'none' : 'auto',
                 boxShadow:       '0 4px 40px rgba(0,0,0,0.10)',
+                outline:         showCanvasFrame ? '2px solid #0EA5E9' : '1px solid transparent',
+                outlineOffset:   showCanvasFrame ? '0px' : '-1px',
                 backgroundImage: showGrid
                   ? 'radial-gradient(circle, #D8E1F0 1px, transparent 1px)'
                   : 'none',
                 backgroundSize: '24px 24px',
               }}
               onClick={e => {
-                e.stopPropagation()
-                activeTool === 'cursor' && onSelect(null)
+                if (e.target === e.currentTarget && activeTool === 'cursor') {
+                  setIsCanvasPinned(true)
+                  onSelect(null)
+                }
               }}
+              onMouseEnter={() => setIsCanvasHover(true)}
+              onMouseLeave={() => setIsCanvasHover(false)}
             >
+              {showCanvasFrame && (
+                <>
+                  {[
+                    { left: -5, top: -5 },
+                    { right: -5, top: -5 },
+                    { left: -5, bottom: -5 },
+                    { right: -5, bottom: -5 },
+                  ].map((style, index) => (
+                    <span
+                      key={index}
+                      style={{
+                        position: 'absolute',
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        background: '#FFFFFF',
+                        border: '1.5px solid #0EA5E9',
+                        zIndex: 40,
+                        pointerEvents: 'none',
+                        ...style,
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+
               {/* Empty state */}
               {elements.length === 0 && (
                 <div style={{
@@ -250,7 +303,7 @@ export default function Canvas({
                 </div>
               )}
 
-              {/* Elements — pass zoom down for correct drag math */}
+              {/* ── Elements ── */}
               {elements.map(el => (
                 <CanvasElement
                   key={el.id}
@@ -260,7 +313,8 @@ export default function Canvas({
                   onDelete={onDelete}
                   onUpdate={onUpdate}
                   onContextMenu={onContextMenu}
-                  zoom={zoom}                 // ← FIX: zoom-aware drag & resize
+                  zoom={zoom}
+                  activeBreakpoint={activeBreakpoint}
                 />
               ))}
             </div>
@@ -287,24 +341,18 @@ export default function Canvas({
           zIndex:       50,
         }}
       >
-        {/* Cursor tool */}
         <ToolBtn active={activeTool === 'cursor'} onClick={() => setActiveTool('cursor')} title="Select (V)">
           <MousePointer2 size={15} />
         </ToolBtn>
-
-        {/* Hand tool */}
         <ToolBtn active={activeTool === 'hand'} onClick={() => setActiveTool('hand')} title="Pan (H)">
           <Hand size={15} />
         </ToolBtn>
 
         <Divider />
 
-        {/* Zoom out */}
         <ToolBtn onClick={zoomOut} title="Zoom out">
           <span style={{ fontSize: '16px', lineHeight: 1 }}>−</span>
         </ToolBtn>
-
-        {/* Zoom label — click to reset 100% */}
         <button
           onClick={() => applyZoom(1)}
           style={{
@@ -323,20 +371,13 @@ export default function Canvas({
         >
           {Math.round(zoom * 100)}%
         </button>
-
-        {/* Zoom in */}
         <ToolBtn onClick={zoomIn} title="Zoom in">
           <span style={{ fontSize: '16px', lineHeight: 1 }}>+</span>
         </ToolBtn>
 
         <Divider />
 
-        {/* Grid toggle */}
-        <ToolBtn
-          active={showGrid}
-          onClick={() => setShowGrid(v => !v)}
-          title="Toggle grid"
-        >
+        <ToolBtn active={showGrid} onClick={() => setShowGrid(v => !v)} title="Toggle grid">
           <GridIcon />
         </ToolBtn>
       </div>
@@ -344,26 +385,24 @@ export default function Canvas({
   )
 }
 
-// ── Small helpers ──────────────────────────────────────────────────────────────
-
 function ToolBtn({ active, onClick, title, children }) {
   return (
     <button
       onClick={e => { e.stopPropagation(); onClick() }}
       title={title}
       style={{
-        width:        '34px',
-        height:       '34px',
-        borderRadius: '10px',
-        border:       'none',
-        background:   active ? '#1a1a1a' : 'transparent',
-        color:        active ? 'white'   : '#5E6F8E',
-        display:      'flex',
-        alignItems:   'center',
+        width:          '34px',
+        height:         '34px',
+        borderRadius:   '10px',
+        border:         'none',
+        background:     active ? '#1a1a1a' : 'transparent',
+        color:          active ? 'white'   : '#5E6F8E',
+        display:        'flex',
+        alignItems:     'center',
         justifyContent: 'center',
-        cursor:       'pointer',
-        transition:   'all 0.15s',
-        flexShrink:   0,
+        cursor:         'pointer',
+        transition:     'all 0.15s',
+        flexShrink:     0,
       }}
     >
       {children}

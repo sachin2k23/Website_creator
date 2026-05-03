@@ -1,3 +1,43 @@
+function makePortfolioResponsive(elements) {
+  const breakpoints = {
+    p1: { tablet: { x: 0, y: 0, width: 768, height: 68 }, phone: { x: 0, y: 0, width: 390, height: 120 } },
+    p2: { tablet: { x: 32, y: 16, width: 180, height: 36 }, phone: { x: 24, y: 18, width: 180, height: 32, fontSize: 20 } },
+    p3: { tablet: { x: 330, y: 22, width: 280, height: 24 }, phone: { x: 24, y: 72, width: 342, height: 24, textAlign: 'left', fontSize: 12 } },
+    p4: { tablet: { x: 656, y: 14, width: 80, height: 36 }, phone: { x: 286, y: 16, width: 80, height: 36 } },
+    p5: { tablet: { x: 40, y: 112, width: 220, height: 24 }, phone: { x: 24, y: 150, width: 240, height: 24 } },
+    p6: { tablet: { x: 40, y: 146, width: 620, height: 144, fontSize: 48 }, phone: { x: 24, y: 184, width: 342, height: 132, fontSize: 38, lineHeight: 1.12 } },
+    p7: { tablet: { x: 40, y: 318, width: 520, height: 56 }, phone: { x: 24, y: 340, width: 342, height: 78, fontSize: 15 } },
+    p8: { tablet: { x: 40, y: 410, width: 164, height: 50 }, phone: { x: 24, y: 452, width: 342, height: 50 } },
+    p9: { tablet: { x: 216, y: 410, width: 148, height: 50 }, phone: { x: 24, y: 516, width: 342, height: 50 } },
+    p11: { tablet: { x: 0, y: 540, width: 768, height: 100 }, phone: { x: 0, y: 610, width: 390, height: 260 } },
+    p12: { tablet: { x: 64, y: 558, width: 180, height: 40 }, phone: { x: 24, y: 634, width: 342, height: 34, fontSize: 24 } },
+    p13: { tablet: { x: 64, y: 598, width: 180, height: 24 }, phone: { x: 24, y: 670, width: 342, height: 22 } },
+    p14: { tablet: { x: 294, y: 558, width: 190, height: 40 }, phone: { x: 24, y: 716, width: 342, height: 34, fontSize: 24 } },
+    p15: { tablet: { x: 294, y: 598, width: 190, height: 24 }, phone: { x: 24, y: 752, width: 342, height: 22 } },
+    p16: { tablet: { x: 524, y: 558, width: 190, height: 40 }, phone: { x: 24, y: 798, width: 342, height: 34, fontSize: 24 } },
+    p17: { tablet: { x: 524, y: 598, width: 190, height: 24 }, phone: { x: 24, y: 834, width: 342, height: 22 } },
+    p18: { tablet: { x: 40, y: 700, width: 300, height: 48, fontSize: 34 }, phone: { x: 24, y: 920, width: 342, height: 42, fontSize: 32 } },
+    p19: { tablet: { x: 488, y: 714, width: 240, height: 24 }, phone: { x: 24, y: 970, width: 342, height: 24, textAlign: 'left' } },
+    p20: { tablet: { x: 40, y: 780, width: 328, height: 230 }, phone: { x: 24, y: 1024, width: 342, height: 220 } },
+    p21: { tablet: { x: 40, y: 1024, width: 200, height: 20 }, phone: { x: 24, y: 1260, width: 260, height: 20 } },
+    p22: { tablet: { x: 40, y: 1048, width: 328, height: 32, fontSize: 18 }, phone: { x: 24, y: 1286, width: 342, height: 32, fontSize: 19 } },
+    p23: { tablet: { x: 400, y: 780, width: 328, height: 230 }, phone: { x: 24, y: 1360, width: 342, height: 220 } },
+    p24: { tablet: { x: 400, y: 1024, width: 200, height: 20 }, phone: { x: 24, y: 1596, width: 260, height: 20 } },
+    p25: { tablet: { x: 400, y: 1048, width: 328, height: 32, fontSize: 18 }, phone: { x: 24, y: 1622, width: 342, height: 32, fontSize: 19 } },
+    p26: { tablet: { x: 40, y: 1136, width: 688, height: 2 }, phone: { x: 24, y: 1710, width: 342, height: 2 } },
+    p27: { tablet: { x: 40, y: 1160, width: 330, height: 24 }, phone: { x: 24, y: 1734, width: 342, height: 24, fontSize: 12 } },
+    p28: { tablet: { x: 420, y: 1160, width: 308, height: 24 }, phone: { x: 24, y: 1770, width: 342, height: 24, textAlign: 'left', fontSize: 12 } },
+  }
+
+  return elements.map(element => ({
+    ...element,
+    breakpoints: {
+      ...(element.breakpoints ?? {}),
+      ...(breakpoints[element.id] ?? {}),
+    },
+  }))
+}
+
 export const TEMPLATES = {
   blank: {
     name: 'Blank',
@@ -6,17 +46,16 @@ export const TEMPLATES = {
 
   portfolio: {
     name: 'Portfolio',
-    elements: [
-      { id: 'p1', type: 'container', x: 0, y: 0, width: 1200, height: 68, fill: '#ffffff', borderColor: '#E2E8F4', radius: 0, opacity: 100 },
-      { id: 'p2', type: 'heading', x: 48, y: 16, width: 180, height: 36, content: 'Alex Morgan', fontSize: 20, fontWeight: 700, fontFamily: 'Inter', textColor: '#0F2348', opacity: 100 },
-      { id: 'p3', type: 'paragraph', x: 780, y: 22, width: 320, height: 24, content: 'Work    About    Journal    Contact', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100 },
-      { id: 'p4', type: 'button', x: 1100, y: 14, width: 80, height: 36, content: 'Hire Me', fill: '#0F2348', textColor: '#ffffff', fontSize: 12, fontWeight: 600, fontFamily: 'Inter', radius: 20, opacity: 100 },
+    elements: makePortfolioResponsive([
+      { id: 'p1', type: 'container', x: 0, y: 0, width: 1200, height: 68, fill: '#ffffff', borderColor: '#E2E8F4', radius: 0, opacity: 100, breakpoints: { tablet: { x: 0, y: 0, width: 768, height: 68 }, phone: { x: 0, y: 0, width: 390, height: 120 } } },
+      { id: 'p2', type: 'heading', x: 48, y: 16, width: 180, height: 36, content: 'Alex Morgan', fontSize: 20, fontWeight: 700, fontFamily: 'Inter', textColor: '#0F2348', opacity: 100, breakpoints: { tablet: { x: 32, y: 16, width: 180, height: 36 }, phone: { x: 24, y: 18, width: 180, height: 32, fontSize: 20 } } },
+      { id: 'p3', type: 'paragraph', x: 780, y: 22, width: 320, height: 24, content: 'Work    About    Journal    Contact', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100, breakpoints: { tablet: { x: 330, y: 22, width: 280, height: 24 }, phone: { x: 24, y: 72, width: 342, height: 24, textAlign: 'left', fontSize: 12 } } },
+      { id: 'p4', type: 'button', x: 1100, y: 14, width: 80, height: 36, content: 'Hire Me', fill: '#0F2348', textColor: '#ffffff', fontSize: 12, fontWeight: 600, fontFamily: 'Inter', radius: 20, opacity: 100, breakpoints: { tablet: { x: 656, y: 14, width: 80, height: 36 }, phone: { x: 286, y: 16, width: 80, height: 36 } } },
       { id: 'p5', type: 'paragraph', x: 48, y: 120, width: 200, height: 24, content: '✦ AVAILABLE FOR WORK', fontSize: 11, fontWeight: 600, fontFamily: 'Inter', textColor: '#2348D7', letterSpacing: 1, opacity: 100 },
       { id: 'p6', type: 'heading', x: 48, y: 152, width: 660, height: 180, content: 'Product Designer & Creative Developer', fontSize: 64, fontWeight: 700, fontFamily: 'Playfair Display', textColor: '#0F2348', lineHeight: 1.1, opacity: 100 },
       { id: 'p7', type: 'paragraph', x: 48, y: 348, width: 480, height: 56, content: 'I help startups and brands craft memorable digital experiences. Based in San Francisco, working worldwide.', fontSize: 16, fontFamily: 'Inter', textColor: '#5E6F8E', lineHeight: 1.7, opacity: 100 },
       { id: 'p8', type: 'button', x: 48, y: 428, width: 164, height: 50, content: 'View My Work →', fill: '#0F2348', textColor: '#ffffff', fontSize: 14, fontWeight: 600, fontFamily: 'Inter', radius: 28, opacity: 100 },
       { id: 'p9', type: 'button', x: 224, y: 428, width: 148, height: 50, content: 'Download CV', fill: 'transparent', textColor: '#0F2348', borderColor: '#D8E1F0', fontSize: 14, fontWeight: 500, fontFamily: 'Inter', radius: 28, opacity: 100 },
-      { id: 'p10', type: 'image', x: 720, y: 100, width: 440, height: 420, fill: '#EEF3FF', radius: 24, opacity: 100 },
       { id: 'p11', type: 'container', x: 0, y: 560, width: 1200, height: 100, fill: '#F7F9FD', radius: 0, opacity: 100 },
       { id: 'p12', type: 'heading', x: 120, y: 578, width: 200, height: 40, content: '5+ Years', fontSize: 28, fontWeight: 700, fontFamily: 'Inter', textColor: '#0F2348', opacity: 100 },
       { id: 'p13', type: 'paragraph', x: 120, y: 618, width: 200, height: 24, content: 'Experience', fontSize: 13, fontFamily: 'Inter', textColor: '#8A9ABB', opacity: 100 },
@@ -35,7 +74,7 @@ export const TEMPLATES = {
       { id: 'p26', type: 'divider', x: 48, y: 1200, width: 1104, height: 2, fill: '#E2E8F4', opacity: 100 },
       { id: 'p27', type: 'paragraph', x: 48, y: 1220, width: 400, height: 24, content: '© 2024 Alex Morgan. All rights reserved.', fontSize: 13, fontFamily: 'Inter', textColor: '#AAB8D4', opacity: 100 },
       { id: 'p28', type: 'paragraph', x: 800, y: 1220, width: 352, height: 24, content: 'Twitter    Dribbble    LinkedIn    Email', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100 },
-    ]
+    ])
   },
 
   landing: {
