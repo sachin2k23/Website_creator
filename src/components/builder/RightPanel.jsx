@@ -99,7 +99,7 @@ function ImageUploadSection({ selected, onUpdate }) {
   const fileRef = useRef(null)
   const urlRef  = useRef(null)
   const [dragging, setDragging]   = useState(false)
-  const [tab, setTab]             = useState('upload') // 'upload' | 'url'
+  const [tab, setTab]             = useState('upload')
   const [urlValue, setUrlValue]   = useState(selected.src?.startsWith('http') ? selected.src : '')
 
   const handleFile = (file) => {
@@ -120,7 +120,6 @@ function ImageUploadSection({ selected, onUpdate }) {
 
   return (
     <Section title="Image" defaultOpen>
-
       {/* Tab switcher */}
       <div className="flex gap-1 mb-3 p-1 bg-[#F3F6FB] rounded-xl">
         {['upload', 'url'].map(t => (
@@ -135,7 +134,6 @@ function ImageUploadSection({ selected, onUpdate }) {
       </div>
 
       {selected.src ? (
-        /* Preview */
         <div className="flex flex-col gap-2">
           <div className="w-full rounded-xl overflow-hidden border border-[#E2E8F4] bg-[#F7F9FD]" style={{ aspectRatio: '16/9' }}>
             <img src={selected.src} alt="preview" className="w-full h-full object-cover" />
@@ -156,7 +154,6 @@ function ImageUploadSection({ selected, onUpdate }) {
           </div>
         </div>
       ) : tab === 'upload' ? (
-        /* Drop zone */
         <div
           onDragOver={e => { e.preventDefault(); setDragging(true) }}
           onDragLeave={() => setDragging(false)}
@@ -179,7 +176,6 @@ function ImageUploadSection({ selected, onUpdate }) {
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
         </div>
       ) : (
-        /* URL input */
         <div className="flex flex-col gap-2">
           <input
             ref={urlRef}
@@ -235,21 +231,32 @@ function ImageUploadSection({ selected, onUpdate }) {
 // ── Main ───────────────────────────────────────────────────────────────────────
 const TEXT_TYPES = ['heading', 'paragraph', 'text', 'link', 'button', 'label']
 
-export default function RightPanel({ selected, onUpdate, canvasSettings, onCanvasUpdate, onDelete, onDuplicate, onReorder, activeBreakpoint = 'desktop', customWidth = 800 }) {
+export default function RightPanel({
+  selected,
+  onUpdate,
+  canvasSettings,
+  onCanvasUpdate,
+  onDelete,
+  onDuplicate,
+  onReorder,
+  activeBreakpoint = 'desktop',
+  customWidth = 800,
+}) {
   const [showBorder, setShowBorder] = useState(!!selected?.borderColor)
   const [showShadow, setShowShadow] = useState(!!selected?.shadowColor)
 
   const isText  = selected && TEXT_TYPES.includes(selected.type)
   const isImage = selected?.type === 'image'
   const update  = (key, val) => { if (selected) onUpdate(selected.id, { [key]: val }) }
-  const breakpoint = BREAKPOINTS.find(bp => bp.id === activeBreakpoint)
+
+  const breakpoint  = BREAKPOINTS.find(bp => bp.id === activeBreakpoint)
   const canvasWidth = getCanvasWidth(activeBreakpoint, canvasSettings, customWidth)
 
   return (
     <div className="w-[260px] h-full bg-white border-l border-[#D8E1F0] flex flex-col shrink-0 overflow-y-auto">
       {selected ? (
         <>
-          {/* Header */}
+          {/* ── Header ── */}
           <div className="px-4 py-3 border-b border-[#EEF2FA] shrink-0 flex items-center justify-between">
             <div>
               <p className="text-[#8A9ABB] text-[10px] uppercase tracking-widest">Properties</p>
@@ -257,21 +264,23 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
               <p className="text-[#2348D7] text-[10px] font-semibold mt-1">{breakpoint?.label || 'Desktop'} breakpoint</p>
             </div>
             <div className="flex gap-1">
-              <button onClick={() => onDuplicate(selected.id)} title="Duplicate"
-                className="w-7 h-7 rounded-lg flex items-center justify-center border border-[#E2E8F4] text-[#8A9ABB] hover:border-[#2348D7] hover:text-[#2348D7] hover:bg-[#EEF3FF] transition-all text-xs">
-                ⧉
-              </button>
-              <button onClick={() => onDelete(selected.id)} title="Delete"
-                className="w-7 h-7 rounded-lg flex items-center justify-center border border-[#E2E8F4] text-[#8A9ABB] hover:border-red-300 hover:text-red-400 hover:bg-red-50 transition-all">
-                <X size={11} />
-              </button>
+              <button
+                onClick={() => onDuplicate(selected.id)}
+                title="Duplicate"
+                className="w-7 h-7 rounded-lg flex items-center justify-center border border-[#E2E8F4] text-[#8A9ABB] hover:border-[#2348D7] hover:text-[#2348D7] hover:bg-[#EEF3FF] transition-all text-xs"
+              >⧉</button>
+              <button
+                onClick={() => onDelete(selected.id)}
+                title="Delete"
+                className="w-7 h-7 rounded-lg flex items-center justify-center border border-[#E2E8F4] text-[#8A9ABB] hover:border-red-300 hover:text-red-400 hover:bg-red-50 transition-all"
+              ><X size={11} /></button>
             </div>
           </div>
 
-          {/* Image upload (image elements only) */}
+          {/* Image upload */}
           {isImage && <ImageUploadSection selected={selected} onUpdate={onUpdate} />}
 
-          {/* Position */}
+          {/* ── Position ── */}
           <Section title="Position">
             <div className="grid grid-cols-2 gap-2">
               <NumberInput label="X" value={Math.round(selected.x || 0)} suffix="px" onChange={val => update('x', val)} />
@@ -279,7 +288,7 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
             </div>
           </Section>
 
-          {/* Size */}
+          {/* ── Size ── */}
           <Section title="Size">
             <div className="grid grid-cols-2 gap-2">
               <NumberInput label="Width"  value={Math.round(selected.width  || 200)} suffix="px" onChange={val => update('width',  val)} />
@@ -287,17 +296,20 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
             </div>
           </Section>
 
-          {/* Arrange */}
+          {/* ── Arrange ── */}
           <Section title="Arrange">
             <div className="flex items-center gap-1">
               {[
-                { fn: 'back-all', icon: SendToBack,  label: 'Back'     },
-                { fn: 'back',     icon: ArrowDown,   label: 'Backward' },
-                { fn: 'forward',  icon: ArrowUp,     label: 'Forward'  },
-                { fn: 'front',    icon: BringToFront, label: 'Front'   },
+                { fn: 'back-all', icon: SendToBack,   label: 'Back'     },
+                { fn: 'back',     icon: ArrowDown,    label: 'Backward' },
+                { fn: 'forward',  icon: ArrowUp,      label: 'Forward'  },
+                { fn: 'front',    icon: BringToFront, label: 'Front'    },
               ].map(({ fn, icon: Icon, label }) => (
-                <button key={fn} onClick={() => onReorder(selected.id, fn)}
-                  className="flex-1 flex flex-col items-center gap-1 py-2 rounded-lg border border-[#E2E8F4] hover:border-[#2348D7] hover:bg-[#EEF3FF] text-[#5E6F8E] hover:text-[#2348D7] transition-all">
+                <button
+                  key={fn}
+                  onClick={() => onReorder(selected.id, fn)}
+                  className="flex-1 flex flex-col items-center gap-1 py-2 rounded-lg border border-[#E2E8F4] hover:border-[#2348D7] hover:bg-[#EEF3FF] text-[#5E6F8E] hover:text-[#2348D7] transition-all"
+                >
                   <Icon size={13} />
                   <span className="text-[9px]">{label}</span>
                 </button>
@@ -305,127 +317,179 @@ export default function RightPanel({ selected, onUpdate, canvasSettings, onCanva
             </div>
           </Section>
 
-          {/* Typography */}
+          {/* ── Typography ── */}
           <Section title="Typography">
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <NumberInput label="Size"   value={selected.fontSize   || (selected.type === 'heading' ? 32 : 16)} suffix="px" onChange={val => update('fontSize',   val)} />
-                <NumberInput label="Line H" value={selected.lineHeight || ''} suffix="x" onChange={val => update('lineHeight', val)} />
-              </div>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <NumberInput
+                label="Size"
+                value={selected.fontSize || (selected.type === 'heading' ? 32 : 16)}
+                suffix="px"
+                onChange={val => update('fontSize', val)}
+              />
+              <NumberInput
+                label="Line H"
+                value={selected.lineHeight || ''}
+                suffix="x"
+                onChange={val => update('lineHeight', val)}
+              />
+            </div>
 
-              {isText && (
-                <>
-              <p className="text-[#AAB8D4] text-[9px] mb-1.5 font-medium uppercase tracking-wide">Font</p>
-              <select value={selected.fontFamily || 'Inter'} onChange={e => update('fontFamily', e.target.value)}
-                className="w-full mb-3 bg-[#F3F6FB] border border-[#E2E8F4] rounded-xl px-3 py-2 text-xs text-[#0F2348] outline-none focus:border-[#2348D7]">
-                {['Inter','Poppins','Playfair Display','Roboto','Lato','Montserrat','Georgia','Merriweather'].map(f => (
-                  <option key={f}>{f}</option>
-                ))}
-              </select>
+            {isText && (
+              <>
+                <p className="text-[#AAB8D4] text-[9px] mb-1.5 font-medium uppercase tracking-wide">Font</p>
+                <select
+                  value={selected.fontFamily || 'Inter'}
+                  onChange={e => update('fontFamily', e.target.value)}
+                  className="w-full mb-3 bg-[#F3F6FB] border border-[#E2E8F4] rounded-xl px-3 py-2 text-xs text-[#0F2348] outline-none focus:border-[#2348D7]"
+                >
+                  {['Inter', 'Poppins', 'Playfair Display', 'Roboto', 'Lato', 'Montserrat', 'Georgia', 'Merriweather'].map(f => (
+                    <option key={f}>{f}</option>
+                  ))}
+                </select>
 
-              <p className="text-[#AAB8D4] text-[9px] mb-1.5 font-medium uppercase tracking-wide">Weight</p>
-              <div className="grid grid-cols-3 gap-1 mb-3">
-                {[{ label: 'Regular', val: 400 },{ label: 'Medium', val: 500 },{ label: 'Bold', val: 700 }].map(w => (
-                  <button key={w.val} onClick={() => update('fontWeight', w.val)}
-                    className={`py-1.5 rounded-lg text-[10px] border transition-colors ${
-                      (selected.fontWeight || (selected.type === 'heading' ? 700 : 400)) === w.val
-                        ? 'bg-[#EEF3FF] border-[#2348D7] text-[#2348D7] font-semibold'
-                        : 'border-[#E2E8F4] text-[#5E6F8E] hover:border-[#2348D7]'
-                    }`} style={{ fontWeight: w.val }}>{w.label}</button>
-                ))}
-              </div>
+                <p className="text-[#AAB8D4] text-[9px] mb-1.5 font-medium uppercase tracking-wide">Weight</p>
+                <div className="grid grid-cols-3 gap-1 mb-3">
+                  {[{ label: 'Regular', val: 400 }, { label: 'Medium', val: 500 }, { label: 'Bold', val: 700 }].map(w => (
+                    <button
+                      key={w.val}
+                      onClick={() => update('fontWeight', w.val)}
+                      className={`py-1.5 rounded-lg text-[10px] border transition-colors ${
+                        (selected.fontWeight || (selected.type === 'heading' ? 700 : 400)) === w.val
+                          ? 'bg-[#EEF3FF] border-[#2348D7] text-[#2348D7] font-semibold'
+                          : 'border-[#E2E8F4] text-[#5E6F8E] hover:border-[#2348D7]'
+                      }`}
+                      style={{ fontWeight: w.val }}
+                    >{w.label}</button>
+                  ))}
+                </div>
 
-              <p className="text-[#AAB8D4] text-[9px] mb-1.5 font-medium uppercase tracking-wide">Format</p>
-              <div className="flex items-center gap-1 mb-3">
-                {[
-                  { ch: 'B', title: 'Bold',      active: (selected.fontWeight||400)>=700, click: () => update('fontWeight',(selected.fontWeight||400)>=700?400:700), style:{fontWeight:700} },
-                  { ch: 'I', title: 'Italic',    active: !!selected.italic,    click: () => update('italic',   !selected.italic),    style:{fontStyle:'italic'} },
-                  { ch: 'U', title: 'Underline', active: !!selected.underline, click: () => update('underline',!selected.underline), style:{textDecoration:'underline'} },
-                ].map(b => (
-                  <button key={b.ch} onClick={b.click} title={b.title} style={b.style}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center border text-xs transition-colors ${b.active?'bg-[#EEF3FF] border-[#2348D7] text-[#2348D7]':'border-[#E2E8F4] text-[#5E6F8E] hover:border-[#2348D7]'}`}>
-                    {b.ch}
-                  </button>
-                ))}
-                <div className="w-px h-5 bg-[#E2E8F4] mx-0.5" />
-                {[{a:'left',i:'⬤'},{a:'center',i:'⬤'},{a:'right',i:'⬤'}].map(({a,i})=>(
-                  <button key={a} onClick={()=>update('textAlign',a)} title={`Align ${a}`}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center border text-[9px] transition-colors ${(selected.textAlign||'left')===a?'bg-[#EEF3FF] border-[#2348D7] text-[#2348D7]':'border-[#E2E8F4] text-[#5E6F8E] hover:border-[#2348D7]'}`}>
-                    {a==='left'?'◀':a==='center'?'●':'▶'}
-                  </button>
-                ))}
-              </div>
-              <ColorRow label="Color" color={selected.textColor||'#111827'} onChange={val=>update('textColor',val)} />
-                </>
-              )}
-            </Section>
+                <p className="text-[#AAB8D4] text-[9px] mb-1.5 font-medium uppercase tracking-wide">Format</p>
+                <div className="flex items-center gap-1 mb-3">
+                  {[
+                    { ch: 'B', title: 'Bold',      active: (selected.fontWeight || 400) >= 700, click: () => update('fontWeight', (selected.fontWeight || 400) >= 700 ? 400 : 700), style: { fontWeight: 700 } },
+                    { ch: 'I', title: 'Italic',    active: !!selected.italic,    click: () => update('italic',    !selected.italic),    style: { fontStyle: 'italic' } },
+                    { ch: 'U', title: 'Underline', active: !!selected.underline, click: () => update('underline', !selected.underline), style: { textDecoration: 'underline' } },
+                  ].map(b => (
+                    <button
+                      key={b.ch}
+                      onClick={b.click}
+                      title={b.title}
+                      style={b.style}
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center border text-xs transition-colors ${
+                        b.active ? 'bg-[#EEF3FF] border-[#2348D7] text-[#2348D7]' : 'border-[#E2E8F4] text-[#5E6F8E] hover:border-[#2348D7]'
+                      }`}
+                    >{b.ch}</button>
+                  ))}
+                  <div className="w-px h-5 bg-[#E2E8F4] mx-0.5" />
+                  {[{ a: 'left', i: '◀' }, { a: 'center', i: '●' }, { a: 'right', i: '▶' }].map(({ a, i }) => (
+                    <button
+                      key={a}
+                      onClick={() => update('textAlign', a)}
+                      title={`Align ${a}`}
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center border text-[9px] transition-colors ${
+                        (selected.textAlign || 'left') === a ? 'bg-[#EEF3FF] border-[#2348D7] text-[#2348D7]' : 'border-[#E2E8F4] text-[#5E6F8E] hover:border-[#2348D7]'
+                      }`}
+                    >{i}</button>
+                  ))}
+                </div>
 
-          {/* Styles */}
+                <ColorRow label="Color" color={selected.textColor || '#111827'} onChange={val => update('textColor', val)} />
+              </>
+            )}
+          </Section>
+
+          {/* ── Styles ── */}
           <Section title="Styles">
-            {!isImage && <ColorRow label="Fill" color={selected.fill||'#ffffff'} onChange={val=>update('fill',val)} />}
+            {!isImage && (
+              <ColorRow label="Fill" color={selected.fill || '#ffffff'} onChange={val => update('fill', val)} />
+            )}
 
             {showBorder ? (
-              <ColorRow label="Border" color={selected.borderColor||'#e2e8f4'} onChange={val=>update('borderColor',val)}
-                onRemove={()=>{setShowBorder(false);update('borderColor',null)}} />
+              <ColorRow
+                label="Border"
+                color={selected.borderColor || '#e2e8f4'}
+                onChange={val => update('borderColor', val)}
+                onRemove={() => { setShowBorder(false); update('borderColor', null) }}
+              />
             ) : (
               <div className="flex items-center justify-between py-2">
                 <span className="text-[#5E6F8E] text-xs">Border</span>
-                <button onClick={()=>{setShowBorder(true);update('borderColor','#e2e8f4')}}
-                  className="text-[#AAB8D4] hover:text-[#2348D7] text-xs border border-dashed border-[#D8E1F0] px-3 py-1 rounded-lg transition-colors">+ Add</button>
+                <button
+                  onClick={() => { setShowBorder(true); update('borderColor', '#e2e8f4') }}
+                  className="text-[#AAB8D4] hover:text-[#2348D7] text-xs border border-dashed border-[#D8E1F0] px-3 py-1 rounded-lg transition-colors"
+                >+ Add</button>
               </div>
             )}
 
             {showShadow ? (
-              <ColorRow label="Shadow" color={selected.shadowColor||'#00000033'} onChange={val=>update('shadowColor',val)}
-                onRemove={()=>{setShowShadow(false);update('shadowColor',null)}} />
+              <ColorRow
+                label="Shadow"
+                color={selected.shadowColor || '#00000033'}
+                onChange={val => update('shadowColor', val)}
+                onRemove={() => { setShowShadow(false); update('shadowColor', null) }}
+              />
             ) : (
               <div className="flex items-center justify-between py-2">
                 <span className="text-[#5E6F8E] text-xs">Shadow</span>
-                <button onClick={()=>{setShowShadow(true);update('shadowColor','#00000033')}}
-                  className="text-[#AAB8D4] hover:text-[#2348D7] text-xs border border-dashed border-[#D8E1F0] px-3 py-1 rounded-lg transition-colors">+ Add</button>
+                <button
+                  onClick={() => { setShowShadow(true); update('shadowColor', '#00000033') }}
+                  className="text-[#AAB8D4] hover:text-[#2348D7] text-xs border border-dashed border-[#D8E1F0] px-3 py-1 rounded-lg transition-colors"
+                >+ Add</button>
               </div>
             )}
 
             <div className="flex items-center justify-between py-2 gap-3">
               <span className="text-[#5E6F8E] text-xs shrink-0">Radius</span>
-              <div className="w-28"><NumberInput value={selected.radius||0} suffix="px" onChange={val=>update('radius',val)} /></div>
+              <div className="w-28">
+                <NumberInput value={selected.radius || 0} suffix="px" onChange={val => update('radius', val)} />
+              </div>
             </div>
             <div className="flex items-center justify-between py-2 gap-3">
               <span className="text-[#5E6F8E] text-xs shrink-0">Opacity</span>
-              <div className="w-28"><NumberInput value={selected.opacity??100} suffix="%" onChange={val=>update('opacity',Math.min(100,Math.max(0,val)))} /></div>
+              <div className="w-28">
+                <NumberInput value={selected.opacity ?? 100} suffix="%" onChange={val => update('opacity', Math.min(100, Math.max(0, val)))} />
+              </div>
             </div>
           </Section>
         </>
       ) : (
         <>
+          {/* ── Canvas properties ── */}
           <div className="px-4 py-3 border-b border-[#EEF2FA] shrink-0">
             <p className="text-[#8A9ABB] text-[10px] uppercase tracking-widest">Properties</p>
             <p className="text-[#0F2348] text-sm font-semibold mt-0.5">Canvas</p>
             <p className="text-[#2348D7] text-[10px] font-semibold mt-1">{breakpoint?.label || 'Desktop'} breakpoint</p>
           </div>
+
           <Section title="Breakpoint">
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-2">
-                <NumberInput label="X" value={canvasSettings.x || 0} suffix="px" onChange={val=>onCanvasUpdate({x:val})} />
-                <NumberInput label="Y" value={canvasSettings.y || 0} suffix="px" onChange={val=>onCanvasUpdate({y:val})} />
+                <NumberInput label="X" value={canvasSettings.x || 0} suffix="px" onChange={val => onCanvasUpdate({ x: val })} />
+                <NumberInput label="Y" value={canvasSettings.y || 0} suffix="px" onChange={val => onCanvasUpdate({ y: val })} />
               </div>
               <div>
                 <p className="text-[#5E6F8E] text-xs mb-2">Width</p>
-                <NumberInput value={canvasWidth} onChange={val=>activeBreakpoint === 'desktop' && val>0&&onCanvasUpdate({width:val})} />
+                <NumberInput
+                  value={canvasWidth}
+                  onChange={val => activeBreakpoint === 'desktop' && val > 0 && onCanvasUpdate({ width: val })}
+                />
               </div>
               <div>
                 <p className="text-[#5E6F8E] text-xs mb-2">Height</p>
-                <NumberInput value={canvasSettings.height} onChange={val=>val>0&&onCanvasUpdate({height:val})} />
+                <NumberInput value={canvasSettings.height} onChange={val => val > 0 && onCanvasUpdate({ height: val })} />
               </div>
             </div>
           </Section>
+
           <Section title="Typography">
             <div className="grid grid-cols-2 gap-2">
-              <NumberInput label="Base" value={canvasSettings.fontSize || 16} suffix="px" onChange={val=>onCanvasUpdate({fontSize:val})} />
-              <NumberInput label="Line H" value={canvasSettings.lineHeight || ''} suffix="x" onChange={val=>onCanvasUpdate({lineHeight:val})} />
+              <NumberInput label="Base" value={canvasSettings.fontSize || 16} suffix="px" onChange={val => onCanvasUpdate({ fontSize: val })} />
+              <NumberInput label="Line H" value={canvasSettings.lineHeight || ''} suffix="x" onChange={val => onCanvasUpdate({ lineHeight: val })} />
             </div>
           </Section>
+
           <Section title="Styles">
-            <ColorRow label="Fill" color={canvasSettings.fill} onChange={val=>onCanvasUpdate({fill:val})} />
+            <ColorRow label="Fill" color={canvasSettings.fill} onChange={val => onCanvasUpdate({ fill: val })} />
           </Section>
         </>
       )}

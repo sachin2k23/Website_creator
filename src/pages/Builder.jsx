@@ -37,10 +37,10 @@ const DEFAULT_SIZES = {
 export default function Builder({ onBack, initialElements = [], projectName = 'My Project' }) {
 
   // ── Pages ──────────────────────────────────────────────────────────────────
-  const [pages, setPages]             = useState([{ id: 'home', name: 'Home' }])
+  const [pages, setPages]               = useState([{ id: 'home', name: 'Home' }])
   const [activePageId, setActivePageId] = useState('home')
 
-  // ── Breakpoint (owned here, single source of truth) ───────────────────────
+  // ── Breakpoint ────────────────────────────────────────────────────────────
   const [activeBreakpoint, setActiveBreakpoint] = useState('desktop')
   const [customWidth, setCustomWidth]           = useState(800)
 
@@ -80,15 +80,14 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
   const historyRef   = useRef([{ home: [] }])
   const historyIndex = useRef(0)
 
-  const pushHistory = useCallback((newTree) => {
-    setTreeByPage(prev => {
-      const snapshot = { ...prev, [activePageId]: newTree }
-      const trimmed  = historyRef.current.slice(0, historyIndex.current + 1)
-      trimmed.push(snapshot)
-      historyRef.current   = trimmed
-      historyIndex.current = trimmed.length - 1
-      return snapshot
-    })
+  // Push snapshot helper — returns the new treeByPage
+  const pushSnapshot = useCallback((nextPageTree, prevTreeByPage) => {
+    const snapshot = { ...prevTreeByPage, [activePageId]: nextPageTree }
+    const trimmed  = historyRef.current.slice(0, historyIndex.current + 1)
+    trimmed.push(snapshot)
+    historyRef.current   = trimmed
+    historyIndex.current = trimmed.length - 1
+    return snapshot
   }, [activePageId])
 
   // ── Selected element ───────────────────────────────────────────────────────
@@ -107,27 +106,37 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
     historyIndex.current = 0
   }, [initialElements]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Breakpoint switch — auto-generate defaults for elements that lack them ─
+  // ── Breakpoint switch ──────────────────────────────────────────────────────
   const handleBreakpointChange = useCallback((bp) => {
     setActiveBreakpoint(bp)
     setSelectedId(null)
-
     if (bp !== 'desktop') {
       const desktopCanvasWidth = canvasSettings?.width || 1200
       setTree(prev =>
         prev.map(el => {
-          if (el.breakpoints?.[bp]) return el          // already has override
+          if (el.breakpoints?.[bp]) return el
           return generateResponsiveDefaults(el, desktopCanvasWidth)
         })
       )
     }
   }, [canvasSettings, setTree])
 
-  // ── Insert ─────────────────────────────────────────────────────────────────
+  // ── Shared: commit new node(s) to tree + history ──────────────────────────
+  const commitNodes = useCallback((newNodes) => {
+    setTreeByPage(prev => {
+      const current = prev[activePageId] || []
+      const next    = [...current, ...newNodes]
+      return pushSnapshot(next, prev)
+    })
+    setSelectedId(newNodes[newNodes.length - 1]?.id ?? null)
+  }, [activePageId, pushSnapshot])
+
+  // ── Click-to-insert ────────────────────────────────────────────────────────
   const handleInsert = useCallback((el) => {
-    const sizes = DEFAULT_SIZES[el.id] || { width: 200, height: 100 }
+    const sizes              = DEFAULT_SIZES[el.id] || { width: 200, height: 100 }
     const desktopCanvasWidth = canvasSettings?.width || 1200
 
+    // Group elements (navigation, hero-block, cta-block, etc.)
     if (el.type === 'group') {
       const baseTime = Date.now()
       const newNodes = (el.children || []).map((child, index) =>
@@ -139,19 +148,8 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
           children: child.children || [],
         }, desktopCanvasWidth)
       )
-
       if (!newNodes.length) return
-
-      setTree(prev => {
-        const next     = [...prev, ...newNodes]
-        const snapshot = { ...treeByPage, [activePageId]: next }
-        const trimmed  = historyRef.current.slice(0, historyIndex.current + 1)
-        trimmed.push(snapshot)
-        historyRef.current   = trimmed
-        historyIndex.current = trimmed.length - 1
-        return next
-      })
-      setSelectedId(newNodes[0].id)
+      commitNodes(newNodes)
       return
     }
 
@@ -165,18 +163,18 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
       textColor:   '#111827',
       children:    [],
       ...el,
-      id:          Date.now().toString(),
-      type:        el.type || el.id,
-      name:        el.name || el.label,
-      x:           el.x ?? 80,
-      y:           el.y ?? 80,
-      width:       el.width ?? sizes.width,
-      height:      el.height ?? sizes.height,
-      children:    el.children || [],
+      id:     Date.now().toString(),
+      type:   el.type || el.id,
+      name:   el.name || el.label,
+      x:      el.x    ?? 80,
+      y:      el.y    ?? 80,
+      width:  el.width  ?? sizes.width,
+      height: el.height ?? sizes.height,
     }, desktopCanvasWidth)
 
+    // Nest inside selected container if applicable
     if (selectedId) {
-      const selected = findNode(tree, selectedId)
+      const selected    = findNode(tree, selectedId)
       const isContainer = selected?.type === 'container' || selected?.type === 'section' || selected?.type === 'frame'
       if (isContainer) {
         setTree(prev => updateNode(prev, selectedId, { children: [...(selected.children || []), newNode] }))
@@ -185,39 +183,72 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
       }
     }
 
-    setTree(prev => {
-      const next     = [...prev, newNode]
-      const snapshot = { ...treeByPage, [activePageId]: next }
-      const trimmed  = historyRef.current.slice(0, historyIndex.current + 1)
-      trimmed.push(snapshot)
-      historyRef.current   = trimmed
-      historyIndex.current = trimmed.length - 1
-      return next
-    })
-    setSelectedId(newNode.id)
-  }, [tree, selectedId, treeByPage, activePageId, setTree, canvasSettings])
+    commitNodes([newNode])
+  }, [tree, selectedId, canvasSettings, commitNodes, setTree])
+
+  // ── Drag-to-canvas insert ──────────────────────────────────────────────────
+  // Called by Canvas when user drops an element from InsertPanel onto the canvas.
+  // dropX / dropY are already in canvas-space coordinates (zoom-corrected).
+  const handleDropInsert = useCallback((el, dropX, dropY) => {
+    const sizes              = DEFAULT_SIZES[el.id] || { width: 200, height: 100 }
+    const desktopCanvasWidth = canvasSettings?.width || 1200
+
+    // Group elements — offset each child relative to the drop point
+    if (el.type === 'group') {
+      const baseTime = Date.now()
+      const newNodes = (el.children || []).map((child, index) =>
+        generateResponsiveDefaults({
+          ...child,
+          id:       `${baseTime + index}`,
+          type:     child.type || child.id,
+          name:     child.name || child.label || child.type || child.id,
+          x:        Math.max(0, (child.x ?? 0) + dropX),
+          y:        Math.max(0, (child.y ?? 0) + dropY),
+          children: child.children || [],
+        }, desktopCanvasWidth)
+      )
+      if (!newNodes.length) return
+      commitNodes(newNodes)
+      return
+    }
+
+    // Single element — center on drop cursor
+    const elWidth  = el.width  ?? sizes.width
+    const elHeight = el.height ?? sizes.height
+
+    const newNode = generateResponsiveDefaults({
+      content:     '',
+      fill:        '#ffffff',
+      borderColor: null,
+      shadowColor: null,
+      radius:      0,
+      opacity:     100,
+      textColor:   '#111827',
+      children:    [],
+      ...el,
+      id:     Date.now().toString(),
+      type:   el.type || el.id,
+      name:   el.name || el.label,
+      x:      Math.max(0, dropX - Math.round(elWidth  / 2)),
+      y:      Math.max(0, dropY - Math.round(elHeight / 2)),
+      width:  elWidth,
+      height: elHeight,
+    }, desktopCanvasWidth)
+
+    commitNodes([newNode])
+  }, [canvasSettings, commitNodes])
 
   // ── Delete ─────────────────────────────────────────────────────────────────
   const handleDelete = useCallback((id) => {
-    setTree(prev => {
-      const next     = deleteNode(prev, id)
-      const snapshot = { ...treeByPage, [activePageId]: next }
-      const trimmed  = historyRef.current.slice(0, historyIndex.current + 1)
-      trimmed.push(snapshot)
-      historyRef.current   = trimmed
-      historyIndex.current = trimmed.length - 1
-      return next
+    setTreeByPage(prev => {
+      const current = prev[activePageId] || []
+      const next    = deleteNode(current, id)
+      return pushSnapshot(next, prev)
     })
     setSelectedId(null)
-  }, [setTree, treeByPage, activePageId])
+  }, [activePageId, pushSnapshot])
 
-  /**
-   * handleUpdate — accepts either:
-   *   (id, changesObject)      — legacy style from RightPanel / keyboard shortcuts
-   *   (id, fullElementObject)  — new style from CanvasElement (breakpoint-aware)
-   *
-   * We detect which by checking if the second arg has an `id` field that matches.
-   */
+  // ── Update ─────────────────────────────────────────────────────────────────
   const handleUpdate = useCallback((id, changesOrFullElement) => {
     const isFullElement =
       changesOrFullElement &&
@@ -226,13 +257,10 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
 
     setTree(prev => {
       if (isFullElement) {
-        // Full element object from CanvasElement — just splice it in
         return updateNode(prev, id, changesOrFullElement)
       }
 
-      // Legacy: plain changes object from RightPanel / keyboard shortcuts.
-      // Layout changes go to the active breakpoint; style changes to root.
-      const layoutKeys = new Set(['x', 'y', 'width', 'height'])
+      const layoutKeys    = new Set(['x', 'y', 'width', 'height'])
       const layoutChanges = {}
       const styleChanges  = {}
 
@@ -283,39 +311,23 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
       x:  layout.x + 20,
       y:  layout.y + 20,
     }, desktopCanvasWidth)
-
-    setTree(prev => {
-      const next     = [...prev, newEl]
-      const snapshot = { ...treeByPage, [activePageId]: next }
-      const trimmed  = historyRef.current.slice(0, historyIndex.current + 1)
-      trimmed.push(snapshot)
-      historyRef.current   = trimmed
-      historyIndex.current = trimmed.length - 1
-      return next
-    })
-    setSelectedId(newEl.id)
-  }, [elements, setTree, treeByPage, activePageId, activeBreakpoint, canvasSettings])
+    commitNodes([newEl])
+  }, [elements, activeBreakpoint, canvasSettings, commitNodes])
 
   // ── Reorder ────────────────────────────────────────────────────────────────
   const handleReorder = useCallback((id, direction) => {
-    setTree(prev => {
-      const index = prev.findIndex(el => el.id === id)
+    setTreeByPage(prev => {
+      const current = prev[activePageId] || []
+      const index   = current.findIndex(el => el.id === id)
       if (index === -1) return prev
-      const next = [...prev]
-
+      const next = [...current]
       if (direction === 'forward'  && index < next.length - 1) [next[index], next[index + 1]] = [next[index + 1], next[index]]
       if (direction === 'back'     && index > 0)               [next[index], next[index - 1]] = [next[index - 1], next[index]]
       if (direction === 'front')   { const [el] = next.splice(index, 1); next.push(el) }
       if (direction === 'back-all'){ const [el] = next.splice(index, 1); next.unshift(el) }
-
-      const snapshot = { ...treeByPage, [activePageId]: next }
-      const trimmed  = historyRef.current.slice(0, historyIndex.current + 1)
-      trimmed.push(snapshot)
-      historyRef.current   = trimmed
-      historyIndex.current = trimmed.length - 1
-      return next
+      return pushSnapshot(next, prev)
     })
-  }, [setTree, treeByPage, activePageId])
+  }, [activePageId, pushSnapshot])
 
   // ── Page management ────────────────────────────────────────────────────────
   const handleAddPage = () => {
@@ -365,8 +377,8 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
 
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault()
-        const step = e.shiftKey ? 10 : 1
-        const el   = elements.find(el => el.id === selectedId)
+        const step   = e.shiftKey ? 10 : 1
+        const el     = elements.find(el => el.id === selectedId)
         if (!el) return
         const layout = getElementLayout(el, activeBreakpoint)
         const delta  = {
@@ -389,9 +401,7 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
     return () => window.removeEventListener('click', close)
   }, [])
 
-  // ── RightPanel: resolve selected element layout for display ───────────────
-  // Pass a resolved layout view to RightPanel so its numeric inputs show
-  // breakpoint-specific values, not always desktop values.
+  // ── Resolve selected element layout for RightPanel ────────────────────────
   const selectedForPanel = selectedElement
     ? { ...selectedElement, ...getElementLayout(selectedElement, activeBreakpoint) }
     : null
@@ -458,6 +468,7 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
               onBreakpointChange={handleBreakpointChange}
               customWidth={customWidth}
               onCustomWidthChange={setCustomWidth}
+              onDropInsert={handleDropInsert}
             />
 
             <RightPanel

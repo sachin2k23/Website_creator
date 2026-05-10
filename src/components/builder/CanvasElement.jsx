@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { getElementLayout, getResponsiveValue, setElementLayout } from '../../utils/responsive'
+import { getContainedElements, getSnapResult, isContainerElement } from '../../utils/editorGeometry'
 
 const HANDLES = [
   { id: 'nw', cursor: 'nw-resize', style: { top: -5,               left: -5               } },
@@ -96,9 +97,14 @@ export default function CanvasElement({
   onContextMenu,
   zoom = 1,
   activeBreakpoint = 'desktop',
+  elements = [],
+  canvasWidth = 1200,
+  canvasHeight = 900,
+  onInteractionGuides,
 }) {
   const dragging    = useRef(false)
   const startPos    = useRef({ mouseX: 0, mouseY: 0, elX: 0, elY: 0 })
+  const dragChildren = useRef([])
   const resizing    = useRef(null)
   const resizeStart = useRef({})
 
@@ -139,18 +145,51 @@ export default function CanvasElement({
     onSelect(element.id)
     dragging.current = true
     startPos.current = { mouseX: e.clientX, mouseY: e.clientY, elX: x, elY: y }
+    dragChildren.current = isContainerElement(element)
+      ? getContainedElements(element, elements, activeBreakpoint).map(childElement => ({
+          element: childElement,
+          layout: getElementLayout(childElement, activeBreakpoint),
+        }))
+      : []
 
     const onMove = (e) => {
       if (!dragging.current) return
       const dx = (e.clientX - startPos.current.mouseX) / zoom
       const dy = (e.clientY - startPos.current.mouseY) / zoom
+      const nextBox = {
+        x: startPos.current.elX + dx,
+        y: startPos.current.elY + dy,
+        width: w,
+        height: h,
+      }
+      const snap = getSnapResult({
+        movingBox: nextBox,
+        elements,
+        activeId: element.id,
+        ignoredIds: dragChildren.current.map(child => child.element.id),
+        canvasWidth,
+        canvasHeight,
+        breakpointId: activeBreakpoint,
+      })
+      onInteractionGuides?.(snap.guides)
       handleUpdate(element.id, {
-        x: Math.round(startPos.current.elX + dx),
-        y: Math.round(startPos.current.elY + dy),
+        x: snap.x,
+        y: snap.y,
+      })
+
+      const snappedDx = snap.x - startPos.current.elX
+      const snappedDy = snap.y - startPos.current.elY
+      dragChildren.current.forEach(({ element: childElement, layout }) => {
+        onUpdate(childElement.id, {
+          x: Math.round((layout.x || 0) + snappedDx),
+          y: Math.round((layout.y || 0) + snappedDy),
+        })
       })
     }
     const onUp = () => {
       dragging.current = false
+      dragChildren.current = []
+      onInteractionGuides?.({ vertical: [], horizontal: [] })
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
@@ -185,6 +224,7 @@ export default function CanvasElement({
     }
     const onUp = () => {
       resizing.current = null
+      onInteractionGuides?.({ vertical: [], horizontal: [] })
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
@@ -198,6 +238,7 @@ export default function CanvasElement({
   const border  = element.borderColor ? `1.5px solid ${element.borderColor}` : undefined
   const shadow  = element.shadowColor ? `0 4px 24px ${element.shadowColor}` : undefined
   const opacity = (element.opacity    ?? 100) / 100
+  const isFrameLike = isContainerElement(element)
 
   const sharedTextProps = (defaultColor, defaultSize, defaultWeight, defaultLine) => ({
     contentEditable: true,
@@ -398,7 +439,7 @@ export default function CanvasElement({
         opacity,
         userSelect:   'none',
         borderRadius: `${radius}px`,
-        zIndex:       isSelected ? 10 : 1,
+        zIndex:       isFrameLike ? 0 : (isSelected ? 10 : 1),
       }}
     >
       <span className="ce-hover-label">{element.name || element.type}</span>
