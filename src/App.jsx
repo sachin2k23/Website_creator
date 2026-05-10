@@ -1,55 +1,68 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Dashboard from './pages/Dashboard'
 import SelectTemplate from './pages/SelectTemplate'
 import Builder from './pages/Builder'
 import { TEMPLATES } from './utils/templates'
+import { getContentHeight } from './utils/editorGeometry'
+
+const cloneElements = elements => elements.map(element => ({
+  ...element,
+  breakpoints: element.breakpoints ? structuredClone(element.breakpoints) : undefined,
+  children: element.children ? cloneElements(element.children) : [],
+}))
+
+const createProjectFromTemplate = (templateKey, overrides = {}) => {
+  const template = TEMPLATES[templateKey] || TEMPLATES.blank
+  const elements = cloneElements(template.elements || [])
+  const canvasSettings = {
+    width: 1200,
+    height: getContentHeight(elements, 'desktop', 900),
+    x: 0,
+    y: 0,
+    fill: '#ffffff',
+  }
+
+  return {
+    id: overrides.id ?? Date.now(),
+    name: overrides.name ?? template.name,
+    viewed: overrides.viewed ?? 'Viewed just now',
+    badge: overrides.badge ?? null,
+    lastViewedHours: overrides.lastViewedHours ?? 0,
+    lastEditedHours: overrides.lastEditedHours ?? 0,
+    archived: false,
+    templateKey,
+    elements,
+    canvasSettings,
+    ...overrides,
+  }
+}
 
 const initialProjects = [
-  {
+  createProjectFromTemplate('portfolio', {
     id: 1,
     name: 'Pearl FREE Portfolio Template ...',
     viewed: 'Viewed 10h ago',
     badge: 'FREE',
-    preview: 'https://placehold.co/600x400/e8e8e8/333?text=Pearl+Template',
     lastViewedHours: 10,
     lastEditedHours: 18,
-    archived: false,
-  },
-  {
-    id: 2,
-    name: 'Amiable Falcon',
-    viewed: 'Viewed 1d ago',
-    badge: null,
-    preview: null,
-    lastViewedHours: 24,
-    lastEditedHours: 6,
-    archived: false,
-  },
-  {
-    id: 3,
-    name: 'Blue Horizon Studio',
-    viewed: 'Viewed 2d ago',
-    badge: null,
-    preview: null,
-    lastViewedHours: 48,
-    lastEditedHours: 12,
-    archived: false,
-  },
+  }),
 ]
 
 export default function App() {
   const [page, setPage] = useState('dashboard')
   const [projects, setProjects] = useState(initialProjects)
   const [builderConfig, setBuilderConfig] = useState({
+    projectId: null,
     elements: [],
     name: 'My Project',
+    canvasSettings: null,
   })
 
   useEffect(() => {
     window.history.replaceState({
       page: 'dashboard',
-      builderConfig: { elements: [], name: 'My Project' },
+      builderConfig: { projectId: null, elements: [], name: 'My Project', canvasSettings: null },
     }, '')
 
     function handlePopState(event) {
@@ -57,12 +70,12 @@ export default function App() {
 
       if (nextState?.page) {
         setPage(nextState.page)
-        setBuilderConfig(nextState.builderConfig ?? { elements: [], name: 'My Project' })
+        setBuilderConfig(nextState.builderConfig ?? { projectId: null, elements: [], name: 'My Project', canvasSettings: null })
         return
       }
 
-      setPage('dashboard')
-      setBuilderConfig({ elements: [], name: 'My Project' })
+    setPage('dashboard')
+    setBuilderConfig({ projectId: null, elements: [], name: 'My Project', canvasSettings: null })
     }
 
     window.addEventListener('popstate', handlePopState)
@@ -72,7 +85,7 @@ export default function App() {
     }
   }, [])
 
-  function navigateTo(nextPage, nextBuilderConfig = { elements: [], name: 'My Project' }) {
+  function navigateTo(nextPage, nextBuilderConfig = { projectId: null, elements: [], name: 'My Project', canvasSettings: null }) {
     setPage(nextPage)
     setBuilderConfig(nextBuilderConfig)
     window.history.pushState({ page: nextPage, builderConfig: nextBuilderConfig }, '')
@@ -82,15 +95,63 @@ export default function App() {
     const template = TEMPLATES[templateKey]
     if (!template) return
 
+    const project = createProjectFromTemplate(templateKey, { id: Date.now() })
     const config = {
-      elements: template.elements.map((element) => ({ ...element })),
-      name: template.name,
+      projectId: project.id,
+      elements: cloneElements(project.elements),
+      name: project.name,
+      canvasSettings: project.canvasSettings,
     }
 
+    setProjects(currentProjects => [project, ...currentProjects])
     setBuilderConfig(config)
     setPage('builder')
     window.history.pushState({ page: 'builder', builderConfig: config }, '')
   }
+
+  function handleOpenProject(projectId) {
+    const project = projects.find(item => item.id === projectId)
+    if (!project) return
+
+    const config = {
+      projectId: project.id,
+      elements: cloneElements(project.elements || []),
+      name: project.name,
+      canvasSettings: project.canvasSettings,
+    }
+
+    setProjects(currentProjects =>
+      currentProjects.map(item =>
+        item.id === projectId
+          ? { ...item, viewed: 'Viewed just now', lastViewedHours: 0 }
+          : item,
+      ),
+    )
+    navigateTo('builder', config)
+  }
+
+  const handleProjectChange = useCallback((projectId, changes) => {
+    if (!projectId) return
+    setProjects(currentProjects =>
+      currentProjects.map(project =>
+        project.id === projectId
+          ? {
+              ...project,
+              ...changes,
+              elements: changes.elements ? cloneElements(changes.elements) : project.elements,
+              canvasSettings: changes.canvasSettings || project.canvasSettings,
+              viewed: 'Viewed just now',
+              lastViewedHours: 0,
+              lastEditedHours: 0,
+            }
+          : project,
+      ),
+    )
+  }, [])
+
+  const handleBuilderProjectChange = useCallback((changes) => {
+    handleProjectChange(builderConfig.projectId, changes)
+  }, [builderConfig.projectId, handleProjectChange])
 
   function handleArchiveProject(projectId) {
     setProjects((currentProjects) =>
@@ -113,28 +174,6 @@ export default function App() {
     setProjects((currentProjects) => currentProjects.filter((project) => project.id !== projectId))
   }
 
-  function handleDuplicateProject(projectId) {
-    setProjects((currentProjects) => {
-      const projectToDuplicate = currentProjects.find((project) => project.id === projectId)
-
-      if (!projectToDuplicate) {
-        return currentProjects
-      }
-
-      const duplicate = {
-        ...projectToDuplicate,
-        id: Date.now(),
-        name: `${projectToDuplicate.name} Copy`,
-        viewed: 'Viewed just now',
-        lastViewedHours: 0,
-        lastEditedHours: 0,
-        archived: false,
-      }
-
-      return [duplicate, ...currentProjects]
-    })
-  }
-
   function handleRenameProject(projectId, nextName) {
     setProjects((currentProjects) =>
       currentProjects.map((project) =>
@@ -154,8 +193,8 @@ export default function App() {
             onArchiveProject={handleArchiveProject}
             onUnarchiveProject={handleUnarchiveProject}
             onDeleteProject={handleDeleteProject}
-            onDuplicateProject={handleDuplicateProject}
             onRenameProject={handleRenameProject}
+            onOpenProject={handleOpenProject}
           />
         </DashboardLayout>
       )}
@@ -168,7 +207,9 @@ export default function App() {
       {page === 'builder' && (
         <Builder
           initialElements={builderConfig.elements}
+          initialCanvasSettings={builderConfig.canvasSettings}
           projectName={builderConfig.name}
+          onProjectChange={handleBuilderProjectChange}
           onBack={() => navigateTo('dashboard')}
         />
       )}

@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Folder,
   Home,
   MoreHorizontal,
   Plus,
@@ -13,11 +14,12 @@ import {
 const GROUP_BG = '#EAF6FF'
 
 const TYPE_META = {
-  desktop:   { label: 'Desktop',   icon: DesktopIcon,   color: '#2563EB', bg: '#EFF6FF' },
-  content:   { label: 'Content',   icon: StackIcon,     color: '#0284C7', bg: GROUP_BG },
-  section:   { label: 'Section',   icon: SectionIcon,   color: '#2563EB', bg: '#EFF6FF' },
-  container: { label: 'Container', icon: FrameIcon,     color: '#2563EB', bg: '#EFF6FF' },
-  frame:     { label: 'Frame',     icon: FrameIcon,     color: '#2563EB', bg: '#EFF6FF' },
+  desktop:   { label: 'Desktop',   icon: DesktopIcon,   color: '#35A7F2', bg: '#EFF6FF' },
+  content:   { label: 'Content',   icon: StackIcon,     color: '#0EA5E9', bg: GROUP_BG },
+  section:   { label: 'Section',   icon: SectionIcon,   color: '#35A7F2', bg: '#EFF6FF' },
+  container: { label: 'Container', icon: FrameIcon,     color: '#0EA5E9', bg: '#EFF6FF' },
+  card:      { label: 'Card',      icon: FrameIcon,     color: '#0EA5E9', bg: '#EFF6FF' },
+  frame:     { label: 'Frame',     icon: FrameIcon,     color: '#0EA5E9', bg: '#EFF6FF' },
   heading:   { label: 'Heading',   icon: TypeIcon,      color: '#7C3AED', bg: '#F3E8FF' },
   paragraph: { label: 'Text',      icon: TypeIcon,      color: '#7C3AED', bg: '#F3E8FF' },
   text:      { label: 'Text',      icon: TypeIcon,      color: '#7C3AED', bg: '#F3E8FF' },
@@ -45,7 +47,8 @@ function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHi
   const meta = TYPE_META[node.type] || { label: node.type || 'Layer', icon: UnknownIcon, color: '#64748B', bg: '#F1F5F9' }
   const Icon = meta.icon
   const label = getLayerLabel(node, meta)
-  const indent = 8 + depth * 16
+  const indent = node.type === 'desktop' ? 4 : 6 + depth * 24
+  const isTopVirtual = node.type === 'desktop' || node.type === 'content'
 
   useEffect(() => {
     if (isSelected && rowRef.current) {
@@ -70,11 +73,11 @@ function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHi
             }
             onSelect(node.id)
           }}
-          className="group flex h-8 w-full items-center rounded-lg text-left transition-colors"
+          className="group flex h-9 w-full items-center rounded-lg text-left transition-colors"
           style={{
             paddingLeft: indent,
-            paddingRight: 8,
-            backgroundColor: isSelected ? '#0EA5E9' : hovered ? '#F1F7FF' : 'transparent',
+            paddingRight: 10,
+            backgroundColor: isSelected ? '#EAF4FF' : hovered && !isTopVirtual ? '#F7F7F8' : 'transparent',
             color: isSelected ? '#FFFFFF' : '#26364D',
           }}
         >
@@ -87,18 +90,18 @@ function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHi
           >
             {hasChildren ? (
               isExpanded
-                ? <ChevronDown size={13} className={isSelected ? 'text-white' : 'text-[#7B8AA5]'} />
-                : <ChevronRight size={13} className={isSelected ? 'text-white' : 'text-[#7B8AA5]'} />
+                ? <ChevronDown size={13} className="text-[#9A9AA0]" />
+                : <ChevronRight size={13} className="text-[#9A9AA0]" />
             ) : (
-              <span className="h-1 w-1 rounded-full bg-[#CBD5E1]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#D1D5DB]" />
             )}
           </span>
 
           <span
             className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
             style={{
-              backgroundColor: isSelected ? 'rgba(255,255,255,0.18)' : meta.bg,
-              color: isSelected ? '#FFFFFF' : meta.color,
+              backgroundColor: 'transparent',
+              color: meta.color,
             }}
           >
             <Icon size={12} />
@@ -107,8 +110,8 @@ function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHi
           <span
             className="min-w-0 flex-1 truncate text-[12px]"
             style={{
-              fontWeight: isSelected || isVirtual ? 650 : 500,
-              color: isSelected ? '#FFFFFF' : isHidden ? '#A8B4C7' : isVirtual ? '#42526D' : '#1D2B44',
+              fontWeight: isSelected || isTopVirtual ? 650 : 500,
+              color: isSelected ? '#243B67' : isHidden ? '#A8B4C7' : isVirtual ? '#5F6368' : '#5F6368',
               textDecoration: isHidden ? 'line-through' : 'none',
             }}
           >
@@ -116,7 +119,7 @@ function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHi
           </span>
 
           {node.badge && (
-            <span className={`ml-2 shrink-0 text-[10px] ${isSelected ? 'text-sky-100' : 'text-[#97A6BD]'}`}>
+            <span className={`ml-2 shrink-0 text-[10px] ${node.type === 'desktop' ? 'text-[#0B84FF]' : isSelected ? 'text-[#2563EB]' : 'text-[#A5A5AA]'}`}>
               {node.badge}
             </span>
           )}
@@ -124,7 +127,7 @@ function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHi
           {!isVirtual && (hovered || isHidden) && (
             <span
               className={`ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
-                isSelected ? 'hover:bg-white/15' : 'hover:bg-[#DBEAFE]'
+                isSelected ? 'hover:bg-[#DBEAFE]' : 'hover:bg-[#EAEAEA]'
               }`}
               onClick={event => {
                 event.stopPropagation()
@@ -137,9 +140,7 @@ function LayerRow({ node, depth = 0, selectedId, onSelect, hiddenIds, onToggleHi
           )}
         </button>
 
-        {isSelected && (
-          <span className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-[#0B74DE]" />
-        )}
+        {isSelected && <span className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-[#0EA5E9]" />}
       </div>
 
       {hasChildren && isExpanded && node.children.map(child => (
@@ -240,40 +241,51 @@ export default function LeftPanel({
   }
 
   return (
-    <div className="flex h-full w-[292px] shrink-0 select-none flex-col border-r border-[#D8E1F0] bg-white">
-      <div className="border-b border-[#E4EBF6] px-3 py-2">
-        <div className="flex rounded-xl bg-[#F2F5FA] p-1">
+    <div className="flex h-full w-[316px] shrink-0 select-none flex-col border-r border-[#E6E6E8] bg-white">
+      <div className="px-4 pb-4 pt-5">
+        <div className="flex rounded-lg bg-[#F3F3F4] p-1">
           {tabs.map(tab => (
             <button
               key={tab}
               type="button"
               onClick={() => onTabChange(tab)}
-              className={`h-8 flex-1 rounded-lg text-[12px] font-semibold transition-all ${
+              className={`h-8 flex-1 rounded-md text-[13px] font-semibold transition-all ${
                 activeTab === tab
-                  ? 'bg-white text-[#0B74DE] shadow-sm'
-                  : 'text-[#75849A] hover:text-[#30425F]'
+                  ? 'bg-white text-[#111827] shadow-sm'
+                  : 'text-[#8A8A8F] hover:text-[#5F6368]'
               }`}
             >
               {tab}
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="border-b border-[#E4EBF6] px-3 py-2">
-        <div className="flex h-9 items-center gap-2 rounded-lg border border-[#DFE6F2] bg-[#F7F9FD] px-2.5">
-          <Search size={13} className="shrink-0 text-[#94A3BD]" />
+        <div className="mt-5 h-px bg-[#E8E8EA]" />
+
+        <button
+          type="button"
+          className="mt-5 flex h-10 w-full items-center gap-2 rounded-lg bg-[#F1F1F2] px-3 text-left text-[13px] font-semibold text-[#5F6368] transition-colors hover:bg-[#EAEAEC]"
+        >
+          <Folder size={15} className="text-[#8A8A8F]" />
+          <span className="min-w-0 flex-1 truncate">/{activePageId || 'home'}</span>
+          <ChevronDown size={14} className="text-[#8A8A8F]" />
+        </button>
+
+        <div className="mt-3 flex h-10 items-center gap-2 rounded-lg bg-[#F1F1F2] px-3">
+          <Search size={15} className="shrink-0 text-[#8A8A8F]" />
           <input
             type="text"
-            placeholder="Search layers..."
+            placeholder="Search..."
             value={search}
             onChange={event => setSearch(event.target.value)}
-            className="w-full bg-transparent text-[12px] text-[#21395F] outline-none placeholder:text-[#94A3BD]"
+            className="w-full bg-transparent text-[13px] text-[#3F3F46] outline-none placeholder:text-[#8A8A8F]"
           />
         </div>
+
+        <div className="mt-5 h-px bg-[#E8E8EA]" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {activeTab === 'Pages' && (
           <div>
             <div className="mb-1 flex items-center justify-between px-2 py-1">
@@ -428,7 +440,7 @@ function area(box) {
 }
 
 function isContainerType(type) {
-  return type === 'container' || type === 'section' || type === 'frame'
+  return type === 'container' || type === 'section' || type === 'frame' || type === 'card'
 }
 
 function compareLayers(a, b) {

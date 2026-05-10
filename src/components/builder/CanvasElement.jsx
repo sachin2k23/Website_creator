@@ -13,7 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { getElementLayout, getResponsiveValue, setElementLayout } from '../../utils/responsive'
-import { getContainedElements, getSnapResult, isContainerElement } from '../../utils/editorGeometry'
+import { clampBoxToCanvas, getContainedElements, getSnapResult, isContainerElement } from '../../utils/editorGeometry'
 
 const HANDLES = [
   { id: 'nw', cursor: 'nw-resize', style: { top: -5,               left: -5               } },
@@ -171,14 +171,19 @@ export default function CanvasElement({
         canvasHeight,
         breakpointId: activeBreakpoint,
       })
-      onInteractionGuides?.(snap.guides)
-      handleUpdate(element.id, {
+      const clampedBox = clampBoxToCanvas({
+        ...nextBox,
         x: snap.x,
         y: snap.y,
+      }, canvasWidth, canvasHeight)
+      onInteractionGuides?.(snap.guides)
+      handleUpdate(element.id, {
+        x: clampedBox.x,
+        y: clampedBox.y,
       })
 
-      const snappedDx = snap.x - startPos.current.elX
-      const snappedDy = snap.y - startPos.current.elY
+      const snappedDx = clampedBox.x - startPos.current.elX
+      const snappedDy = clampedBox.y - startPos.current.elY
       dragChildren.current.forEach(({ element: childElement, layout }) => {
         onUpdate(childElement.id, {
           x: Math.round((layout.x || 0) + snappedDx),
@@ -217,9 +222,16 @@ export default function CanvasElement({
       if (id.includes('w')) { newW = Math.max(40, rw - dx); newX = rx + (rw - newW) }
       if (id.includes('n')) { newH = Math.max(20, rh - dy); newY = ry + (rh - newH) }
 
+      const clampedBox = clampBoxToCanvas({
+        x: newX,
+        y: newY,
+        width: newW,
+        height: newH,
+      }, canvasWidth, canvasHeight)
+
       handleUpdate(element.id, {
-        x: Math.round(newX), y: Math.round(newY),
-        width: Math.round(newW), height: Math.round(newH),
+        x: Math.round(clampedBox.x), y: Math.round(clampedBox.y),
+        width: Math.round(clampedBox.width), height: Math.round(clampedBox.height),
       })
     }
     const onUp = () => {

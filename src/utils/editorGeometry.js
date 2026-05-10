@@ -53,7 +53,10 @@ export function getContainedElements(containerElement, elements, breakpointId = 
 }
 
 export function getCanvasHeight(elements, canvasSettings, breakpointId = 'desktop') {
-  const minHeight = canvasSettings?.height || 900
+  return canvasSettings?.height || getContentHeight(elements, breakpointId)
+}
+
+export function getContentHeight(elements, breakpointId = 'desktop', minHeight = 900) {
   if (!elements?.length) return minHeight
 
   const maxBottom = elements.reduce((acc, element) => {
@@ -62,6 +65,19 @@ export function getCanvasHeight(elements, canvasSettings, breakpointId = 'deskto
   }, 0)
 
   return Math.max(minHeight, maxBottom + CANVAS_PADDING_BOTTOM)
+}
+
+export function clampBoxToCanvas(box, canvasWidth, canvasHeight) {
+  const width = Math.min(box.width, canvasWidth)
+  const height = Math.min(box.height, canvasHeight)
+
+  return {
+    ...box,
+    width,
+    height,
+    x: Math.min(Math.max(0, box.x), Math.max(0, canvasWidth - width)),
+    y: Math.min(Math.max(0, box.y), Math.max(0, canvasHeight - height)),
+  }
 }
 
 export function getSnapResult({

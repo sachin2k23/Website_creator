@@ -14,6 +14,7 @@ import {
   setElementLayout,
   getCanvasWidth,
 } from '../utils/responsive'
+import { getContentHeight } from '../utils/editorGeometry'
 
 const DEFAULT_SIZES = {
   heading:   { width: 320, height: 50  },
@@ -34,7 +35,13 @@ const DEFAULT_SIZES = {
   card:      { width: 300, height: 200 },
 }
 
-export default function Builder({ onBack, initialElements = [], projectName = 'My Project' }) {
+export default function Builder({
+  onBack,
+  initialElements = [],
+  initialCanvasSettings = null,
+  projectName = 'My Project',
+  onProjectChange,
+}) {
 
   // ── Pages ──────────────────────────────────────────────────────────────────
   const [pages, setPages]               = useState([{ id: 'home', name: 'Home' }])
@@ -73,7 +80,12 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
   const [isPreview, setIsPreview]     = useState(false)
   const [contextMenu, setContextMenu] = useState(null)
   const [canvasSettings, setCanvasSettings] = useState({
-    width: 1200, height: 900, x: 0, y: 0, fill: '#ffffff',
+    width: 1200,
+    height: 900,
+    x: 0,
+    y: 0,
+    fill: '#ffffff',
+    ...(initialCanvasSettings || {}),
   })
 
   // ── History ────────────────────────────────────────────────────────────────
@@ -100,11 +112,24 @@ export default function Builder({ onBack, initialElements = [], projectName = 'M
       const base = { ...el, name: el.name || el.type, children: [] }
       return generateResponsiveDefaults(base, desktopCanvasWidth)
     })
+    setCanvasSettings(prev => ({
+      ...prev,
+      ...(initialCanvasSettings || {}),
+      height: initialCanvasSettings?.height || getContentHeight(mapped, 'desktop', 900),
+    }))
     setTreeByPage(prev => ({ ...prev, [activePageId]: mapped }))
     setSelectedId(null)
     historyRef.current   = [{ [activePageId]: mapped }]
     historyIndex.current = 0
-  }, [initialElements]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialElements, initialCanvasSettings]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    onProjectChange?.({
+      name: projectName,
+      elements,
+      canvasSettings,
+    })
+  }, [elements, canvasSettings, projectName, onProjectChange])
 
   // ── Breakpoint switch ──────────────────────────────────────────────────────
   const handleBreakpointChange = useCallback((bp) => {

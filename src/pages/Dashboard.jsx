@@ -2,18 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   MoreHorizontal,
   ChevronDown,
-  Sparkles,
   Check,
   ExternalLink,
-  Link2,
-  Copy,
-  FolderInput,
   Pencil,
-  Settings,
-  Rocket,
-  Archive,
   Trash2,
 } from 'lucide-react'
+import { getElementLayout, getResponsiveValue } from '../utils/responsive'
+import { getCanvasHeight } from '../utils/editorGeometry'
 
 const sortOptions = [
   { key: 'viewed', label: 'Last viewed by me' },
@@ -25,11 +20,10 @@ export default function Dashboard({
   view = 'dashboard',
   projects = [],
   onNewProject,
-  onArchiveProject = () => {},
   onUnarchiveProject = () => {},
   onDeleteProject = () => {},
-  onDuplicateProject = () => {},
   onRenameProject = () => {},
+  onOpenProject = () => {},
 }) {
   const [selectedSort, setSelectedSort] = useState('viewed')
   const [isSortOpen, setIsSortOpen] = useState(false)
@@ -93,43 +87,9 @@ export default function Dashboard({
       ? 'Projects you archive will appear here until you restore them.'
       : 'Browse your recent projects and manage them from one place.'
 
-  async function copyText(value) {
-    try {
-      await navigator.clipboard.writeText(value)
-    } catch {
-      window.prompt('Copy this value:', value)
-    }
-  }
-
   function handleMenuAction(action, project) {
-    const projectUrl = `${window.location.origin}/projects/${project.id}`
-
     if (action === 'open') {
-      window.open(projectUrl, '_blank', 'noopener,noreferrer')
-      setOpenMenuId(null)
-      return
-    }
-
-    if (action === 'copy-link') {
-      copyText(projectUrl)
-      setOpenMenuId(null)
-      return
-    }
-
-    if (action === 'copy-remix-link') {
-      copyText(`${projectUrl}?remix=1`)
-      setOpenMenuId(null)
-      return
-    }
-
-    if (action === 'duplicate') {
-      onDuplicateProject(project.id)
-      setOpenMenuId(null)
-      return
-    }
-
-    if (action === 'move') {
-      window.alert(`Move is ready for folder support for "${project.name}".`)
+      onOpenProject(project.id)
       setOpenMenuId(null)
       return
     }
@@ -141,24 +101,6 @@ export default function Dashboard({
         onRenameProject(project.id, nextName.trim())
       }
 
-      setOpenMenuId(null)
-      return
-    }
-
-    if (action === 'settings') {
-      window.alert(`Settings for "${project.name}" can be connected next.`)
-      setOpenMenuId(null)
-      return
-    }
-
-    if (action === 'upgrade') {
-      window.alert('Upgrade flow can be connected to billing next.')
-      setOpenMenuId(null)
-      return
-    }
-
-    if (action === 'archive') {
-      onArchiveProject(project.id)
       setOpenMenuId(null)
       return
     }
@@ -175,15 +117,8 @@ export default function Dashboard({
   }
 
   const menuItems = [
-    { key: 'open', label: 'Open in New Tab', icon: ExternalLink },
-    { key: 'copy-link', label: 'Copy Link', icon: Link2 },
-    { key: 'copy-remix-link', label: 'Copy Remix Link', icon: Copy },
-    { key: 'duplicate', label: 'Duplicate', icon: Copy },
-    { key: 'move', label: 'Move', icon: FolderInput },
+    { key: 'open', label: 'Open', icon: ExternalLink },
     { key: 'rename', label: 'Rename', icon: Pencil },
-    { key: 'settings', label: 'Open Settings', icon: Settings },
-    { key: 'upgrade', label: 'Upgrade Plan', icon: Rocket },
-    { key: 'archive', label: 'Archive', icon: Archive, divider: true },
     { key: 'delete', label: 'Delete', icon: Trash2, danger: true },
   ]
 
@@ -252,21 +187,17 @@ export default function Dashboard({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {visibleProjects.map((project) => (
             <div key={project.id} className="group cursor-pointer">
-              <div className="w-full aspect-video bg-white rounded-xl overflow-hidden mb-3 border border-[#DCE4F2] shadow-sm group-hover:border-[#BDD0FF] group-hover:shadow-md transition-all">
-                {project.preview ? (
-                  <img
-                    src={project.preview}
-                    alt={project.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#F6F9FF] to-[#E8F0FF]">
-                    <Sparkles size={32} className="text-[#B4C5F6]" />
-                  </div>
-                )}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpenProject(project.id)}
+                onKeyDown={event => event.key === 'Enter' && onOpenProject(project.id)}
+                className="mb-3 overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm transition-all group-hover:border-[#C7D2FE] group-hover:shadow-md"
+              >
+                <ProjectThumbnail project={project} />
               </div>
 
               <div className="flex items-start justify-between gap-3 relative">
@@ -307,7 +238,7 @@ export default function Dashboard({
                     </button>
 
                     {openMenuId === project.id && (
-                      <div className="absolute right-0 top-10 z-20 w-[220px] max-w-[80vw] rounded-3xl border border-[#D8E1F0] bg-white shadow-[0_18px_45px_rgba(35,72,215,0.12)] overflow-hidden">
+                      <div className="absolute right-0 top-8 z-20 w-[148px] max-w-[80vw] overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white py-1 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
                         {menuItems.map((item) => {
                           const Icon = item.icon
 
@@ -316,15 +247,13 @@ export default function Dashboard({
                               key={item.key}
                               type="button"
                               onClick={() => handleMenuAction(item.key, project)}
-                              className={`flex items-center gap-3 w-full px-4 py-3 text-left text-sm transition-colors ${
-                                item.divider ? 'border-t border-[#E6ECF6]' : ''
-                              } ${
+                              className={`flex items-center gap-2 w-full px-3 py-2.5 text-left text-sm transition-colors ${
                                 item.danger
                                   ? 'text-[#D64545] hover:bg-[#FFF3F3]'
-                                  : 'text-[#1F2C44] hover:bg-[#F3F7FF]'
+                                  : 'text-[#1F2C44] hover:bg-[#F5F7FB]'
                               }`}
                             >
-                              <Icon size={16} />
+                              <Icon size={14} />
                               <span>{item.label}</span>
                             </button>
                           )
@@ -340,4 +269,101 @@ export default function Dashboard({
       )}
     </div>
   )
+}
+
+function ProjectThumbnail({ project }) {
+  const ref = useRef(null)
+  const [width, setWidth] = useState(0)
+  const elements = project.elements || []
+  const canvasSettings = project.canvasSettings || { width: 1200, height: 900, fill: '#ffffff' }
+  const canvasWidth = canvasSettings.width || 1200
+  const canvasHeight = getCanvasHeight(elements, canvasSettings, 'desktop')
+  const scale = width ? width / canvasWidth : 0.25
+
+  useEffect(() => {
+    const measure = () => {
+      if (ref.current) setWidth(ref.current.getBoundingClientRect().width)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} className="relative aspect-[4/3] w-full overflow-hidden bg-[#F8FAFC]">
+      {elements.length === 0 ? (
+        <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-[#A1A1AA]">
+          Blank Project
+        </div>
+      ) : (
+        <div
+          style={{
+            width: canvasWidth,
+            height: canvasHeight,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            background: canvasSettings.fill || '#ffffff',
+            position: 'relative',
+          }}
+        >
+          {elements.map(element => (
+            <ThumbnailElement key={element.id} element={element} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ThumbnailElement({ element }) {
+  const layout = getElementLayout(element, 'desktop')
+  const width = layout.width || 200
+  const height = layout.height || 100
+  const base = {
+    position: 'absolute',
+    left: layout.x || 0,
+    top: layout.y || 0,
+    width,
+    height,
+    opacity: (element.opacity ?? 100) / 100,
+    borderRadius: element.radius || 0,
+    boxSizing: 'border-box',
+    overflow: 'hidden',
+  }
+  const border = element.borderColor ? `1.5px solid ${element.borderColor}` : undefined
+  const textBase = {
+    color: element.textColor || '#111827',
+    fontFamily: element.fontFamily || 'Inter, system-ui, sans-serif',
+    fontSize: `${getResponsiveValue(element, 'desktop', 'fontSize', element.type === 'heading' ? 32 : 16)}px`,
+    fontWeight: getResponsiveValue(element, 'desktop', 'fontWeight', element.type === 'heading' ? 700 : 400),
+    lineHeight: getResponsiveValue(element, 'desktop', 'lineHeight', element.lineHeight || 1.3),
+    textAlign: getResponsiveValue(element, 'desktop', 'textAlign', element.textAlign || 'left'),
+    margin: 0,
+    whiteSpace: 'pre-wrap',
+  }
+
+  if (['heading', 'paragraph', 'text', 'label', 'link'].includes(element.type)) {
+    return <div style={{ ...base, height: 'auto', padding: '2px 4px' }}><p style={textBase}>{element.content || element.name || element.type}</p></div>
+  }
+
+  if (element.type === 'button') {
+    return (
+      <div style={{ ...base, background: element.fill || '#2348D7', color: element.textColor || '#fff', border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: element.fontWeight || 600 }}>
+        {element.content || 'Button'}
+      </div>
+    )
+  }
+
+  if (element.type === 'image') {
+    return element.src
+      ? <img src={element.src} alt="" style={{ ...base, objectFit: element.objectFit || 'cover' }} />
+      : <div style={{ ...base, background: element.fill || '#EEF3FF', border }} />
+  }
+
+  if (element.type === 'divider') {
+    return <div style={{ ...base, height: height || 2, background: element.fill || '#E2E8F4' }} />
+  }
+
+  return <div style={{ ...base, background: element.fill || 'transparent', border, boxShadow: element.shadowColor ? `0 4px 24px ${element.shadowColor}` : undefined }} />
 }
