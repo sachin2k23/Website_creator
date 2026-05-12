@@ -203,7 +203,7 @@ export const TEMPLATES = {
 
   landing: {
     name: 'Landing Page',
-    elements: [
+elements: makePortfolioResponsive([
       { id: 'l1', type: 'container', x: 0, y: 0, width: 1200, height: 68, fill: '#ffffff', borderColor: '#E2E8F4', radius: 0, opacity: 100 },
       { id: 'l2', type: 'heading', x: 48, y: 16, width: 140, height: 36, content: 'Flowly', fontSize: 22, fontWeight: 700, fontFamily: 'Poppins', textColor: '#2348D7', opacity: 100 },
       { id: 'l3', type: 'paragraph', x: 440, y: 22, width: 400, height: 24, content: 'Features    Pricing    About    Blog', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'center', opacity: 100 },
@@ -245,7 +245,7 @@ export const TEMPLATES = {
       { id: 'l39', type: 'container', x: 0, y: 1916, width: 1200, height: 200, fill: '#0F2348', radius: 0, opacity: 100 },
       { id: 'l40', type: 'heading', x: 200, y: 1948, width: 800, height: 60, content: 'Ready to build something great?', fontSize: 40, fontWeight: 700, fontFamily: 'Poppins', textColor: '#ffffff', textAlign: 'center', opacity: 100 },
       { id: 'l41', type: 'button', x: 460, y: 2024, width: 280, height: 52, content: 'Start Building for Free →', fill: '#2348D7', textColor: '#ffffff', fontSize: 15, fontWeight: 600, fontFamily: 'Inter', radius: 12, opacity: 100 },
-    ]
+    ])
   },
 
   blog: {
@@ -303,7 +303,7 @@ export const TEMPLATES = {
 
   agencyLegacy: {
     name: 'Agency',
-    elements: [
+    elements: makePortfolioResponsive([
       { id: 'a1', type: 'container', x: 0, y: 0, width: 1200, height: 68, fill: '#ffffff', borderColor: '#E2E8F4', radius: 0, opacity: 100 },
       { id: 'a2', type: 'heading', x: 48, y: 16, width: 180, height: 36, content: 'Studio.co', fontSize: 22, fontWeight: 700, fontFamily: 'Poppins', textColor: '#0F2348', opacity: 100 },
       { id: 'a3', type: 'paragraph', x: 440, y: 22, width: 400, height: 24, content: 'Work    Services    About    Careers', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'center', opacity: 100 },
@@ -356,7 +356,7 @@ export const TEMPLATES = {
       { id: 'a50', type: 'divider', x: 48, y: 1860, width: 1104, height: 1, fill: '#E2E8F4', opacity: 100 },
       { id: 'a51', type: 'paragraph', x: 48, y: 1880, width: 400, height: 24, content: '© 2024 Studio.co · All rights reserved', fontSize: 13, fontFamily: 'Inter', textColor: '#AAB8D4', opacity: 100 },
       { id: 'a52', type: 'paragraph', x: 800, y: 1880, width: 352, height: 24, content: 'Twitter    Instagram    LinkedIn    Dribbble', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100 },
-    ]
+    ])
   },
 // REPLACE the agency: block in src/utils/templates.js
 // Card layout math:
@@ -369,7 +369,7 @@ export const TEMPLATES = {
 
   agency: {
     name: 'Agency',
-    elements: [
+    elements: makePortfolioResponsive([
       // ── NAVIGATION ──────────────────────────────────────────────────────────
       { id: 'a1',  type: 'container', name: 'Navigation',      x: 0,    y: 0,    width: 1200, height: 72,  fill: '#ffffff', borderColor: '#E6ECF5', radius: 0, opacity: 100 },
       { id: 'a2',  type: 'heading',   name: 'Logo',             x: 48,   y: 20,   width: 160,  height: 32,  content: 'Northline', fontSize: 22, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
@@ -457,6 +457,6 @@ export const TEMPLATES = {
       { id: 'a54', type: 'divider',   name: 'Footer Divider',   x: 100,  y: 2696, width: 1000, height: 1,   fill: '#E2E8F4', opacity: 100 },
       { id: 'a55', type: 'paragraph', name: 'Copyright',        x: 100,  y: 2716, width: 460,  height: 22,  content: '© 2026 Northline Studio. All rights reserved.', fontSize: 13, fontFamily: 'Inter', textColor: '#8A9ABB', opacity: 100 },
       { id: 'a56', type: 'paragraph', name: 'Social Links',     x: 740,  y: 2716, width: 360,  height: 22,  content: 'Twitter     Instagram     LinkedIn     Dribbble', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100 },
-    ]
+    ])
   },
 }
