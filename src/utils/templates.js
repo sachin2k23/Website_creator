@@ -358,63 +358,105 @@ export const TEMPLATES = {
       { id: 'a52', type: 'paragraph', x: 800, y: 1880, width: 352, height: 24, content: 'Twitter    Instagram    LinkedIn    Dribbble', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100 },
     ]
   },
+// REPLACE the agency: block in src/utils/templates.js
+// Card layout math:
+//   Total usable width: x=100 to x=1100 = 1000px
+//   4 cards + 3 gaps of 20px = 4*235 + 3*20 = 940+60 = 1000 ✓
+//   Card width: 235px
+//   Text padding inside card: 20px each side
+//   Text x = card_x + 20
+//   Text width = 235 - 40 = 195px  (never bleeds into next card)
 
   agency: {
     name: 'Agency',
-    elements: makeAgencyResponsive([
-      { id: 'a1', type: 'container', name: 'Navigation', x: 0, y: 0, width: 1200, height: 72, fill: '#ffffff', borderColor: '#E6ECF5', radius: 0, opacity: 100 },
-      { id: 'a2', type: 'heading', name: 'Logo', x: 48, y: 20, width: 180, height: 30, content: 'Northline', fontSize: 22, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
-      { id: 'a3', type: 'paragraph', name: 'Navigation Links', x: 426, y: 24, width: 348, height: 22, content: 'Work     Services     Process     Contact', fontSize: 13, fontWeight: 500, fontFamily: 'Inter', textColor: '#5D6B82', textAlign: 'center', opacity: 100 },
-      { id: 'a4', type: 'button', name: 'Nav CTA', x: 1026, y: 16, width: 126, height: 40, content: 'Let us talk', fill: '#0B1F3A', textColor: '#ffffff', fontSize: 13, fontWeight: 700, fontFamily: 'Inter', radius: 999, opacity: 100 },
-      { id: 'a5', type: 'paragraph', name: 'Eyebrow', x: 64, y: 128, width: 360, height: 24, content: 'INDEPENDENT BRAND AND PRODUCT STUDIO', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 2, opacity: 100 },
-      { id: 'a6', type: 'heading', name: 'Hero Heading', x: 64, y: 166, width: 660, height: 170, content: 'We shape brands into digital products people trust.', fontSize: 64, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', lineHeight: 1.06, opacity: 100 },
-      { id: 'a7', type: 'paragraph', name: 'Hero Copy', x: 68, y: 354, width: 520, height: 66, content: 'Strategy, identity, web design, and launch systems for teams that need clarity before scale.', fontSize: 17, fontWeight: 400, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.65, opacity: 100 },
-      { id: 'a8', type: 'button', name: 'Primary CTA', x: 68, y: 458, width: 168, height: 50, content: 'See our work', fill: '#2563EB', textColor: '#ffffff', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', radius: 999, opacity: 100 },
-      { id: 'a9', type: 'button', name: 'Secondary CTA', x: 250, y: 458, width: 148, height: 50, content: 'Our process', fill: '#ffffff', textColor: '#0B1F3A', borderColor: '#D7E0EE', fontSize: 14, fontWeight: 700, fontFamily: 'Inter', radius: 999, opacity: 100 },
-      { id: 'a10', type: 'container', name: 'Hero Visual', x: 746, y: 122, width: 390, height: 410, fill: '#EDF4FF', borderColor: '#DCE8FF', radius: 28, opacity: 100 },
-      { id: 'a11', type: 'container', name: 'Visual Card', x: 804, y: 192, width: 210, height: 160, fill: '#ffffff', borderColor: '#D9E2F2', shadowColor: 'rgba(15,35,72,0.10)', radius: 20, opacity: 100 },
-      { id: 'a12', type: 'container', name: 'Visual Accent', x: 944, y: 362, width: 118, height: 108, fill: '#0B1F3A', radius: 22, opacity: 100 },
-      { id: 'a13', type: 'container', name: 'Stats Band', x: 0, y: 612, width: 1200, height: 122, fill: '#F7FAFE', borderColor: '#EDF2FA', radius: 0, opacity: 100 },
-      { id: 'a14', type: 'heading', name: 'Metric', x: 84, y: 642, width: 190, height: 38, content: '120+', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', opacity: 100 },
-      { id: 'a15', type: 'paragraph', name: 'Metric Label', x: 84, y: 684, width: 190, height: 22, content: 'Projects launched', fontSize: 13, fontFamily: 'Inter', textColor: '#6B7B92', opacity: 100 },
-      { id: 'a16', type: 'heading', name: 'Metric', x: 354, y: 642, width: 190, height: 38, content: '8 yrs', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', opacity: 100 },
-      { id: 'a17', type: 'paragraph', name: 'Metric Label', x: 354, y: 684, width: 190, height: 22, content: 'In business', fontSize: 13, fontFamily: 'Inter', textColor: '#6B7B92', opacity: 100 },
-      { id: 'a18', type: 'heading', name: 'Metric', x: 624, y: 642, width: 190, height: 38, content: '98%', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', opacity: 100 },
-      { id: 'a19', type: 'paragraph', name: 'Metric Label', x: 624, y: 684, width: 190, height: 22, content: 'Client retention', fontSize: 13, fontFamily: 'Inter', textColor: '#6B7B92', opacity: 100 },
-      { id: 'a20', type: 'heading', name: 'Metric', x: 894, y: 642, width: 190, height: 38, content: '15', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', opacity: 100 },
-      { id: 'a21', type: 'paragraph', name: 'Metric Label', x: 894, y: 684, width: 190, height: 22, content: 'Awards won', fontSize: 13, fontFamily: 'Inter', textColor: '#6B7B92', opacity: 100 },
-      { id: 'a22', type: 'paragraph', name: 'Section Label', x: 64, y: 812, width: 200, height: 22, content: 'WHAT WE DO', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 2, opacity: 100 },
-      { id: 'a23', type: 'heading', name: 'Services Heading', x: 64, y: 842, width: 520, height: 56, content: 'Services built for launch velocity.', fontSize: 44, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', lineHeight: 1.1, opacity: 100 },
-      { id: 'a24', type: 'container', name: 'Service Card', x: 64, y: 946, width: 250, height: 210, fill: '#ffffff', borderColor: '#DDE6F3', radius: 18, opacity: 100 },
-      { id: 'a25', type: 'heading', name: 'Service Title', x: 92, y: 976, width: 190, height: 30, content: '01. Brand Systems', fontSize: 19, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
-      { id: 'a26', type: 'paragraph', name: 'Service Copy', x: 92, y: 1020, width: 194, height: 78, content: 'Positioning, voice, visual language, and identity kits that scale across every channel.', fontSize: 13, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
-      { id: 'a27', type: 'container', name: 'Service Card', x: 340, y: 946, width: 250, height: 210, fill: '#ffffff', borderColor: '#DDE6F3', radius: 18, opacity: 100 },
-      { id: 'a28', type: 'heading', name: 'Service Title', x: 368, y: 976, width: 190, height: 30, content: '02. Web Design', fontSize: 19, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
-      { id: 'a29', type: 'paragraph', name: 'Service Copy', x: 368, y: 1020, width: 194, height: 78, content: 'High-converting sites with clear sections, crisp motion, and responsive production layouts.', fontSize: 13, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
-      { id: 'a30', type: 'container', name: 'Service Card', x: 616, y: 946, width: 250, height: 210, fill: '#ffffff', borderColor: '#DDE6F3', radius: 18, opacity: 100 },
-      { id: 'a31', type: 'heading', name: 'Service Title', x: 644, y: 976, width: 190, height: 30, content: '03. Product UI', fontSize: 19, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
-      { id: 'a32', type: 'paragraph', name: 'Service Copy', x: 644, y: 1020, width: 194, height: 78, content: 'Design systems, onboarding flows, and polished interfaces for SaaS and product teams.', fontSize: 13, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
-      { id: 'a33', type: 'container', name: 'Service Card Featured', x: 892, y: 946, width: 244, height: 210, fill: '#EDF4FF', borderColor: '#CFE0FF', radius: 18, opacity: 100 },
-      { id: 'a34', type: 'heading', name: 'Service Title', x: 920, y: 976, width: 190, height: 30, content: '04. Launch Ops', fontSize: 19, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', opacity: 100 },
-      { id: 'a35', type: 'paragraph', name: 'Service Copy', x: 920, y: 1020, width: 188, height: 78, content: 'Analytics, QA, CMS setup, and handoff systems so launch day feels calm.', fontSize: 13, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
-      { id: 'a36', type: 'paragraph', name: 'Section Label', x: 64, y: 1260, width: 220, height: 22, content: 'SELECTED WORK', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 2, opacity: 100 },
-      { id: 'a37', type: 'heading', name: 'Work Heading', x: 64, y: 1290, width: 480, height: 56, content: 'Recent launches with measurable impact.', fontSize: 44, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', lineHeight: 1.12, opacity: 100 },
-      { id: 'a38', type: 'paragraph', name: 'View Link', x: 930, y: 1318, width: 190, height: 22, content: 'View all work ->', fontSize: 13, fontWeight: 700, fontFamily: 'Inter', textColor: '#2563EB', textAlign: 'right', opacity: 100 },
-      { id: 'a39', type: 'container', name: 'Featured Project', x: 64, y: 1400, width: 690, height: 376, fill: '#EDF4FF', borderColor: '#DCE8FF', radius: 24, opacity: 100 },
-      { id: 'a40', type: 'paragraph', name: 'Project Tag', x: 96, y: 1740, width: 260, height: 18, content: 'BRAND IDENTITY / WEB DESIGN', fontSize: 10, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 1.4, opacity: 100 },
-      { id: 'a41', type: 'heading', name: 'Project Title', x: 96, y: 1766, width: 480, height: 36, content: 'Vertex - fintech rebrand', fontSize: 24, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
-      { id: 'a42', type: 'container', name: 'Project Card', x: 790, y: 1400, width: 346, height: 172, fill: '#FFF1EE', borderColor: '#FFE1DA', radius: 20, opacity: 100 },
-      { id: 'a43', type: 'container', name: 'Project Card', x: 790, y: 1604, width: 346, height: 172, fill: '#ECFDF3', borderColor: '#D8F7E5', radius: 20, opacity: 100 },
-      { id: 'a44', type: 'container', name: 'Testimonial', x: 64, y: 1890, width: 1072, height: 196, fill: '#0B1F3A', radius: 28, opacity: 100 },
-      { id: 'a45', type: 'paragraph', name: 'Quote Label', x: 108, y: 1928, width: 180, height: 22, content: 'CLIENT NOTE', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#8FB6FF', letterSpacing: 2, opacity: 100 },
-      { id: 'a46', type: 'heading', name: 'Quote', x: 108, y: 1964, width: 820, height: 76, content: 'Northline gave our brand a sharper story and a site our sales team can actually use.', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#ffffff', lineHeight: 1.18, opacity: 100 },
-      { id: 'a47', type: 'container', name: 'CTA Section', x: 0, y: 2160, width: 1200, height: 260, fill: '#F7FAFE', borderColor: '#EDF2FA', radius: 0, opacity: 100 },
-      { id: 'a48', type: 'heading', name: 'CTA Heading', x: 188, y: 2216, width: 824, height: 66, content: 'Ready to build a brand people understand?', fontSize: 46, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', textAlign: 'center', opacity: 100 },
-      { id: 'a49', type: 'button', name: 'CTA Button', x: 432, y: 2310, width: 178, height: 50, content: 'Start a project', fill: '#2563EB', textColor: '#ffffff', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', radius: 999, opacity: 100 },
-      { id: 'a50', type: 'button', name: 'CTA Secondary', x: 626, y: 2310, width: 146, height: 50, content: 'See pricing', fill: '#ffffff', textColor: '#0B1F3A', borderColor: '#D7E0EE', fontSize: 14, fontWeight: 700, fontFamily: 'Inter', radius: 999, opacity: 100 },
-      { id: 'a51', type: 'divider', name: 'Footer Divider', x: 64, y: 2470, width: 1072, height: 1, fill: '#E2E8F4', opacity: 100 },
-      { id: 'a52', type: 'paragraph', name: 'Copyright', x: 64, y: 2496, width: 400, height: 22, content: 'Copyright 2026 Northline Studio. All rights reserved.', fontSize: 13, fontFamily: 'Inter', textColor: '#8A9ABB', opacity: 100 },
-      { id: 'a53', type: 'paragraph', name: 'Social Links', x: 776, y: 2496, width: 360, height: 22, content: 'Twitter     Instagram     LinkedIn     Dribbble', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100 },
-    ])
+    elements: [
+      // ── NAVIGATION ──────────────────────────────────────────────────────────
+      { id: 'a1',  type: 'container', name: 'Navigation',      x: 0,    y: 0,    width: 1200, height: 72,  fill: '#ffffff', borderColor: '#E6ECF5', radius: 0, opacity: 100 },
+      { id: 'a2',  type: 'heading',   name: 'Logo',             x: 48,   y: 20,   width: 160,  height: 32,  content: 'Northline', fontSize: 22, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
+      { id: 'a3',  type: 'paragraph', name: 'Nav Links',        x: 426,  y: 25,   width: 348,  height: 22,  content: 'Work     Services     Process     Contact', fontSize: 13, fontWeight: 500, fontFamily: 'Inter', textColor: '#5D6B82', textAlign: 'center', opacity: 100 },
+      { id: 'a4',  type: 'button',    name: 'Nav CTA',          x: 1026, y: 16,   width: 126,  height: 40,  content: "Let's talk", fill: '#0B1F3A', textColor: '#ffffff', fontSize: 13, fontWeight: 700, fontFamily: 'Inter', radius: 999, opacity: 100 },
+
+      // ── HERO ─────────────────────────────────────────────────────────────────
+      { id: 'a5',  type: 'container', name: 'Hero BG',          x: 0,    y: 72,   width: 1200, height: 410, fill: '#F7FAFE', radius: 0, opacity: 100 },
+      { id: 'a6',  type: 'paragraph', name: 'Eyebrow',          x: 240,  y: 116,  width: 720,  height: 22,  content: 'INDEPENDENT BRAND AND PRODUCT STUDIO', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 2, textAlign: 'center', opacity: 100 },
+      { id: 'a7',  type: 'heading',   name: 'Hero Heading',     x: 80,   y: 150,  width: 1040, height: 140, content: 'We shape brands into digital products people trust.', fontSize: 58, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', lineHeight: 1.1, textAlign: 'center', opacity: 100 },
+      { id: 'a8',  type: 'paragraph', name: 'Hero Subtext',     x: 280,  y: 302,  width: 640,  height: 52,  content: 'Strategy, identity, web design, and launch systems for teams that need clarity before scale.', fontSize: 17, fontWeight: 400, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.65, textAlign: 'center', opacity: 100 },
+      { id: 'a9',  type: 'button',    name: 'Primary CTA',      x: 416,  y: 370,  width: 168,  height: 50,  content: 'See our work', fill: '#2563EB', textColor: '#ffffff', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', radius: 999, opacity: 100 },
+      { id: 'a10', type: 'button',    name: 'Secondary CTA',    x: 596,  y: 370,  width: 148,  height: 50,  content: 'Our process', fill: '#ffffff', textColor: '#0B1F3A', borderColor: '#D7E0EE', fontSize: 14, fontWeight: 700, fontFamily: 'Inter', radius: 999, opacity: 100 },
+
+      // ── HERO IMAGE ───────────────────────────────────────────────────────────
+      { id: 'a11', type: 'image',     name: 'Hero Image',       x: 100,  y: 500,  width: 1000, height: 460, fill: '#EDF4FF', borderColor: '#DCE8FF', radius: 24, opacity: 100 },
+
+      // ── STATS BAND ───────────────────────────────────────────────────────────
+      { id: 'a12', type: 'container', name: 'Stats Band',       x: 0,    y: 1000, width: 1200, height: 120, fill: '#0B1F3A', radius: 0, opacity: 100 },
+      { id: 'a13', type: 'heading',   name: 'Stat 1 Num',       x: 120,  y: 1024, width: 190,  height: 42,  content: '120+', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#60A5FA', opacity: 100 },
+      { id: 'a14', type: 'paragraph', name: 'Stat 1 Label',     x: 120,  y: 1068, width: 190,  height: 22,  content: 'Projects launched', fontSize: 13, fontFamily: 'Inter', textColor: '#8FB6FF', opacity: 100 },
+      { id: 'a15', type: 'heading',   name: 'Stat 2 Num',       x: 390,  y: 1024, width: 190,  height: 42,  content: '8 yrs', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#60A5FA', opacity: 100 },
+      { id: 'a16', type: 'paragraph', name: 'Stat 2 Label',     x: 390,  y: 1068, width: 190,  height: 22,  content: 'In business', fontSize: 13, fontFamily: 'Inter', textColor: '#8FB6FF', opacity: 100 },
+      { id: 'a17', type: 'heading',   name: 'Stat 3 Num',       x: 660,  y: 1024, width: 190,  height: 42,  content: '98%', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#60A5FA', opacity: 100 },
+      { id: 'a18', type: 'paragraph', name: 'Stat 3 Label',     x: 660,  y: 1068, width: 190,  height: 22,  content: 'Client retention', fontSize: 13, fontFamily: 'Inter', textColor: '#8FB6FF', opacity: 100 },
+      { id: 'a19', type: 'heading',   name: 'Stat 4 Num',       x: 930,  y: 1024, width: 190,  height: 42,  content: '15', fontSize: 34, fontWeight: 800, fontFamily: 'Inter', textColor: '#60A5FA', opacity: 100 },
+      { id: 'a20', type: 'paragraph', name: 'Stat 4 Label',     x: 930,  y: 1068, width: 190,  height: 22,  content: 'Awards won', fontSize: 13, fontFamily: 'Inter', textColor: '#8FB6FF', opacity: 100 },
+
+      // ── SERVICES ─────────────────────────────────────────────────────────────
+      // Section labels
+      { id: 'a21', type: 'paragraph', name: 'Services Label',   x: 100,  y: 1172, width: 220,  height: 22,  content: 'WHAT WE DO', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 2, opacity: 100 },
+      { id: 'a22', type: 'heading',   name: 'Services Heading', x: 100,  y: 1202, width: 600,  height: 52,  content: 'Services built for launch velocity.', fontSize: 40, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', lineHeight: 1.1, opacity: 100 },
+
+      // ── Card 1: x=100, width=235 → text x=120, width=195 ──
+      { id: 'a23', type: 'container', name: 'Card 1',           x: 100,  y: 1306, width: 235,  height: 220, fill: '#ffffff', borderColor: '#DDE6F3', radius: 16, opacity: 100 },
+      { id: 'a24', type: 'heading',   name: 'Card 1 Title',     x: 120,  y: 1326, width: 195,  height: 26,  content: '01. Brand Systems', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
+      { id: 'a25', type: 'paragraph', name: 'Card 1 Copy',      x: 120,  y: 1360, width: 195,  height: 140, content: 'Positioning, voice, visual language, and identity kits that scale across every channel.', fontSize: 12, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
+
+      // ── Card 2: x=355 (100+235+20), width=235 → text x=375, width=195 ──
+      { id: 'a26', type: 'container', name: 'Card 2',           x: 355,  y: 1306, width: 235,  height: 220, fill: '#ffffff', borderColor: '#DDE6F3', radius: 16, opacity: 100 },
+      { id: 'a27', type: 'heading',   name: 'Card 2 Title',     x: 375,  y: 1326, width: 195,  height: 26,  content: '02. Web Design', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
+      { id: 'a28', type: 'paragraph', name: 'Card 2 Copy',      x: 375,  y: 1360, width: 195,  height: 140, content: 'High-converting sites with clear sections, crisp motion, and responsive production layouts.', fontSize: 12, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
+
+      // ── Card 3: x=610 (355+235+20), width=235 → text x=630, width=195 ──
+      { id: 'a29', type: 'container', name: 'Card 3',           x: 610,  y: 1306, width: 235,  height: 220, fill: '#ffffff', borderColor: '#DDE6F3', radius: 16, opacity: 100 },
+      { id: 'a30', type: 'heading',   name: 'Card 3 Title',     x: 630,  y: 1326, width: 195,  height: 26,  content: '03. Product UI', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
+      { id: 'a31', type: 'paragraph', name: 'Card 3 Copy',      x: 630,  y: 1360, width: 195,  height: 140, content: 'Design systems, onboarding flows, and polished interfaces for SaaS and product teams.', fontSize: 12, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
+
+      // ── Card 4: x=865 (610+235+20), width=235 → text x=885, width=195 ──
+      { id: 'a32', type: 'container', name: 'Card 4',           x: 865,  y: 1306, width: 235,  height: 220, fill: '#EDF4FF', borderColor: '#CFE0FF', radius: 16, opacity: 100 },
+      { id: 'a33', type: 'heading',   name: 'Card 4 Title',     x: 885,  y: 1326, width: 195,  height: 26,  content: '04. Launch Ops', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', opacity: 100 },
+      { id: 'a34', type: 'paragraph', name: 'Card 4 Copy',      x: 885,  y: 1360, width: 195,  height: 140, content: 'Analytics, QA, CMS setup, and handoff systems so launch day feels calm.', fontSize: 12, fontFamily: 'Inter', textColor: '#607089', lineHeight: 1.6, opacity: 100 },
+
+      // ── SELECTED WORK ────────────────────────────────────────────────────────
+      { id: 'a35', type: 'paragraph', name: 'Work Label',       x: 100,  y: 1584, width: 220,  height: 22,  content: 'SELECTED WORK', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 2, opacity: 100 },
+      { id: 'a36', type: 'heading',   name: 'Work Heading',     x: 100,  y: 1614, width: 580,  height: 54,  content: 'Recent launches with measurable impact.', fontSize: 38, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', lineHeight: 1.12, opacity: 100 },
+      { id: 'a37', type: 'paragraph', name: 'View All',         x: 920,  y: 1632, width: 180,  height: 22,  content: 'View all work ->', fontSize: 13, fontWeight: 700, fontFamily: 'Inter', textColor: '#2563EB', textAlign: 'right', opacity: 100 },
+
+      // Featured project (left, large)
+      { id: 'a38', type: 'image',     name: 'Project 1 Image',  x: 100,  y: 1692, width: 680,  height: 360, fill: '#EDF4FF', borderColor: '#DCE8FF', radius: 20, opacity: 100 },
+      { id: 'a39', type: 'paragraph', name: 'P1 Tag',           x: 100,  y: 2064, width: 400,  height: 18,  content: 'BRAND IDENTITY / WEB DESIGN', fontSize: 10, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 1.4, opacity: 100 },
+      { id: 'a40', type: 'heading',   name: 'P1 Title',         x: 100,  y: 2086, width: 500,  height: 30,  content: 'Vertex — Fintech rebrand', fontSize: 20, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
+
+      // Two small projects (right column)
+      { id: 'a41', type: 'image',     name: 'Project 2 Image',  x: 812,  y: 1692, width: 288,  height: 168, fill: '#FFF1EE', borderColor: '#FFE1DA', radius: 16, opacity: 100 },
+      { id: 'a42', type: 'paragraph', name: 'P2 Tag',           x: 812,  y: 1872, width: 288,  height: 18,  content: 'MOTION DESIGN', fontSize: 10, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 1.4, opacity: 100 },
+      { id: 'a43', type: 'heading',   name: 'P2 Title',         x: 812,  y: 1894, width: 288,  height: 26,  content: 'Bloom — App launch', fontSize: 16, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
+
+      { id: 'a44', type: 'image',     name: 'Project 3 Image',  x: 812,  y: 1934, width: 288,  height: 118, fill: '#ECFDF3', borderColor: '#D8F7E5', radius: 16, opacity: 100 },
+      { id: 'a45', type: 'paragraph', name: 'P3 Tag',           x: 812,  y: 2064, width: 288,  height: 18,  content: 'E-COMMERCE', fontSize: 10, fontWeight: 800, fontFamily: 'Inter', textColor: '#2563EB', letterSpacing: 1.4, opacity: 100 },
+      { id: 'a46', type: 'heading',   name: 'P3 Title',         x: 812,  y: 2086, width: 288,  height: 26,  content: 'Sage — E-commerce', fontSize: 16, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', opacity: 100 },
+
+      // ── TESTIMONIAL ──────────────────────────────────────────────────────────
+      { id: 'a47', type: 'container', name: 'Testimonial BG',   x: 100,  y: 2172, width: 1000, height: 178, fill: '#0B1F3A', radius: 28, opacity: 100 },
+      { id: 'a48', type: 'paragraph', name: 'Quote Label',      x: 148,  y: 2206, width: 200,  height: 22,  content: 'CLIENT NOTE', fontSize: 11, fontWeight: 800, fontFamily: 'Inter', textColor: '#8FB6FF', letterSpacing: 2, opacity: 100 },
+      { id: 'a49', type: 'heading',   name: 'Quote Text',       x: 148,  y: 2232, width: 800,  height: 76,  content: '"Northline gave our brand a sharper story and a site our sales team can actually use."', fontSize: 25, fontWeight: 700, fontFamily: 'Inter', textColor: '#ffffff', lineHeight: 1.3, opacity: 100 },
+
+      // ── CTA BAND ─────────────────────────────────────────────────────────────
+      { id: 'a50', type: 'container', name: 'CTA BG',           x: 0,    y: 2406, width: 1200, height: 240, fill: '#F7FAFE', borderColor: '#EDF2FA', radius: 0, opacity: 100 },
+      { id: 'a51', type: 'heading',   name: 'CTA Heading',      x: 200,  y: 2446, width: 800,  height: 64,  content: 'Ready to build a brand people understand?', fontSize: 42, fontWeight: 800, fontFamily: 'Inter', textColor: '#0B1F3A', textAlign: 'center', opacity: 100 },
+      { id: 'a52', type: 'button',    name: 'CTA Primary',      x: 432,  y: 2536, width: 178,  height: 50,  content: 'Start a project', fill: '#2563EB', textColor: '#ffffff', fontSize: 14, fontWeight: 800, fontFamily: 'Inter', radius: 999, opacity: 100 },
+      { id: 'a53', type: 'button',    name: 'CTA Secondary',    x: 622,  y: 2536, width: 146,  height: 50,  content: 'See pricing', fill: '#ffffff', textColor: '#0B1F3A', borderColor: '#D7E0EE', fontSize: 14, fontWeight: 700, fontFamily: 'Inter', radius: 999, opacity: 100 },
+
+      // ── FOOTER ───────────────────────────────────────────────────────────────
+      { id: 'a54', type: 'divider',   name: 'Footer Divider',   x: 100,  y: 2696, width: 1000, height: 1,   fill: '#E2E8F4', opacity: 100 },
+      { id: 'a55', type: 'paragraph', name: 'Copyright',        x: 100,  y: 2716, width: 460,  height: 22,  content: '© 2026 Northline Studio. All rights reserved.', fontSize: 13, fontFamily: 'Inter', textColor: '#8A9ABB', opacity: 100 },
+      { id: 'a56', type: 'paragraph', name: 'Social Links',     x: 740,  y: 2716, width: 360,  height: 22,  content: 'Twitter     Instagram     LinkedIn     Dribbble', fontSize: 13, fontFamily: 'Inter', textColor: '#5E6F8E', textAlign: 'right', opacity: 100 },
+    ]
   },
 }

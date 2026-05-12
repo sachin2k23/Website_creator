@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
   AtSign,
   CheckCircle2,
@@ -38,6 +38,7 @@ const ICON_COMPONENTS = {
   nonicons: Feather,
   sargam: CheckCircle2,
 }
+
 
 const STYLE_ID = '__canvas-el-styles__'
 if (!document.getElementById(STYLE_ID)) {
@@ -107,6 +108,8 @@ export default function CanvasElement({
   const dragChildren = useRef([])
   const resizing    = useRef(null)
   const resizeStart = useRef({})
+
+  const [isEditing, setIsEditing] = useState(false)
 
   // Resolve x/y/width/height for the current breakpoint (falls through to desktop)
   const layout = getElementLayout(element, activeBreakpoint)
@@ -252,25 +255,44 @@ export default function CanvasElement({
   const opacity = (element.opacity    ?? 100) / 100
   const isFrameLike = isContainerElement(element)
 
-  const sharedTextProps = (defaultColor, defaultSize, defaultWeight, defaultLine) => ({
-    contentEditable: true,
-    suppressContentEditableWarning: true,
-    onBlur: e => handleUpdate(element.id, { content: e.target.innerText }),
-    style: {
-      color:          element.textColor  || defaultColor,
-      fontSize:       `${getResponsiveValue(element, activeBreakpoint, 'fontSize', defaultSize)}px`,
-      fontWeight:     getResponsiveValue(element, activeBreakpoint, 'fontWeight', defaultWeight),
-      fontFamily:     element.fontFamily || 'inherit',
-      fontStyle:      element.italic     ? 'italic'    : 'normal',
-      textDecoration: element.underline  ? 'underline' : 'none',
-      textAlign:      getResponsiveValue(element, activeBreakpoint, 'textAlign', element.textAlign || 'left'),
-      lineHeight:     getResponsiveValue(element, activeBreakpoint, 'lineHeight', element.lineHeight || defaultLine),
-      letterSpacing:  element.letterSpacing ? `${element.letterSpacing}px` : undefined,
-      outline: 'none', cursor: 'text', width: '100%',
-      padding: '2px 4px', boxSizing: 'border-box',
-      whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-    },
-  })
+const sharedTextProps = (
+  defaultColor,
+  defaultSize,
+  defaultWeight,
+  defaultLine
+) => ({
+  contentEditable: isEditing,
+  suppressContentEditableWarning: true,
+
+  onDoubleClick: (e) => {
+    e.stopPropagation()
+    setIsEditing(true)
+  },
+
+  onBlur: (e) => {
+    handleUpdate(element.id, {
+      content: e.target.innerText
+    })
+
+    setIsEditing(false)
+  },
+
+  style: {
+    color: element.textColor || defaultColor,
+    fontSize: `${getResponsiveValue(element, activeBreakpoint, 'fontSize', defaultSize)}px`,
+    fontWeight: getResponsiveValue(element, activeBreakpoint, 'fontWeight', defaultWeight),
+    fontFamily: element.fontFamily || 'inherit',
+    textAlign: getResponsiveValue(element, activeBreakpoint, 'textAlign', element.textAlign || 'left'),
+    lineHeight: getResponsiveValue(element, activeBreakpoint, 'lineHeight', element.lineHeight || defaultLine),
+
+    outline: 'none',
+    cursor: isEditing ? 'text' : 'move',
+    width: '100%',
+    padding: '2px 4px',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+  }
+})
 
   const renderContent = () => {
     switch (element.type) {
@@ -441,7 +463,10 @@ export default function CanvasElement({
   return (
     <div
       className={`ce-root${isSelected ? ' ce-selected' : ''}`}
-      onMouseDown={handleMouseDown}
+      onMouseDown={(e) => {
+  if (isEditing) return
+  handleMouseDown(e)
+}}
       onClick={e => e.stopPropagation()}
       onContextMenu={e => onContextMenu?.(e, element.id)}
       style={{
